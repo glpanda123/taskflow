@@ -1,0 +1,7 @@
+# Contract linting (runs in CI via `pnpm lint`).
+extends:
+  - recommended
+rules:
+  info-license: off # private project
+  operation-4xx-response: error
+  operation-operationId: error

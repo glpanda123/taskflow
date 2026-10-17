@@ -21,6 +21,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generated contract types are up to date
+        run: pnpm --filter @taskflow/api-contract generate:check
+        env:
+          REDOCLY_TELEMETRY: 'off'
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

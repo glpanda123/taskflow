@@ -1,0 +1,4 @@
+# Used only by openapi-typescript (it doesn't read .redocly.lint-ignore.yaml).
+# Linting is done separately and strictly by `pnpm lint` with redocly.yaml.
+extends:
+  - minimal

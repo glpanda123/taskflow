@@ -1,0 +1,5 @@
+# Intentional exceptions to redocly.yaml rules. Keep each one justified.
+openapi.yaml:
+  operation-4xx-response:
+    # Logout is idempotent: with or without a valid cookie the result is "logged out" → 204.
+    - '#/paths/~1auth~1logout/post/responses'

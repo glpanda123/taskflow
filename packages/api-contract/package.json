@@ -5,9 +5,17 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./openapi.json": "./src/generated/openapi.json",
     "./openapi.yaml": "./openapi.yaml"
   },
   "scripts": {
+    "generate": "openapi-typescript openapi.yaml -c redocly.typegen.yaml -o src/generated/schema.ts --root-types --root-types-no-schema-prefix --enum-values --default-non-nullable false && redocly bundle openapi.yaml -o src/generated/openapi.json",
+    "generate:check": "pnpm generate && git diff --exit-code -- src/generated",
+    "lint": "redocly lint openapi.yaml",
     "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.64.1",
+    "openapi-typescript": "^7.13.0"
   }
 }

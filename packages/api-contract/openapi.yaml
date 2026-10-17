@@ -1,0 +1,826 @@
+# TaskFlow API contract — the single source of truth.
+#
+# Contract-first workflow:
+#   1. Change this file (in a PR, so frontend and backend agree before coding).
+#   2. `pnpm --filter @taskflow/api-contract generate` → TypeScript types + bundled JSON.
+#   3. Web app, MSW mocks and (later) the NestJS API all compile against those types,
+#      so any drift between them becomes a type error instead of a production bug.
+#
+# Scope: only what the prototype screens need (auth, onboarding, Today, project
+# list, task detail, members). Comments, attachments, search and AI come later.
+
+openapi: 3.1.0
+
+info:
+  title: TaskFlow API
+  version: 0.1.0
+  description: |
+    Multi-tenant task management API.
+
+    **Conventions**
+    - All IDs are UUIDs. Timestamps are ISO 8601 in UTC; due dates are plain dates.
+    - Errors use [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457)
+      (`application/problem+json`), the successor of RFC 7807.
+    - Lists are paginated with an opaque `cursor`; follow `nextCursor` until it is `null`.
+    - Writes to a task send the `version` they last read. If someone else changed the
+      task in between, the API answers `409 Conflict` with the current task.
+    - Authorization is enforced here, not in the UI: a viewer calling a write endpoint
+      gets `403`, and a resource in another workspace returns `404` (not `403`, so its
+      existence is not leaked).
+
+servers:
+  - url: /api/v1
+    description: Same origin (Next.js app; MSW mocks this in the prototype)
+
+# Every endpoint needs a bearer access token unless it overrides `security: []`.
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: Accounts and sessions (access token + rotating refresh cookie)
+  - name: Workspaces
+    description: Tenants. Every other resource belongs to exactly one workspace.
+  - name: Projects
+    description: Groups of tasks inside a workspace
+  - name: Tasks
+    description: Tasks, including ordering and status changes
+  - name: Members
+    description: Who belongs to a workspace, with which role
+
+paths:
+  # ───────────────────────────── Auth ─────────────────────────────
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Create an account and start a session
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          $ref: '#/components/responses/SessionCreated'
+        '409':
+          description: Email already registered
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      summary: Log in with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionCreated'
+        '401':
+          description: Wrong email or password (same message for both, to avoid account enumeration)
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshSession
+      summary: Rotate the refresh token and get a new access token
+      description: |
+        Reads the `refresh_token` httpOnly cookie. Each refresh token works once;
+        reusing an old one revokes the whole session (token theft detection).
+      security:
+        - refreshCookie: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SessionCreated'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      summary: End the current session
+      security:
+        - refreshCookie: []
+      responses:
+        '204':
+          description: Session revoked and cookie cleared
+
+  /me:
+    get:
+      tags: [Auth]
+      operationId: getMe
+      summary: Current user and the workspaces they belong to
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Me' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ─────────────────────────── Workspaces ───────────────────────────
+  /workspaces:
+    post:
+      tags: [Workspaces]
+      operationId: createWorkspace
+      summary: Create a workspace (the caller becomes its owner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateWorkspaceRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workspace' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /workspaces/{workspaceId}/today:
+    parameters:
+      - $ref: '#/components/parameters/WorkspaceId'
+    get:
+      tags: [Workspaces]
+      operationId: getToday
+      summary: The "Today" overview
+      description: |
+        Overdue and due-soon tasks plus counts, across every project the caller can see
+        (viewers: only their invited projects). Derived data — may lag writes by a few seconds.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TodayOverview' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ──────────────────────────── Projects ────────────────────────────
+  /workspaces/{workspaceId}/projects:
+    parameters:
+      - $ref: '#/components/parameters/WorkspaceId'
+    get:
+      tags: [Projects]
+      operationId: listProjects
+      summary: Projects the caller can see
+      description: Owners, admins and members see all projects; viewers see only invited ones.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Project' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Projects]
+      operationId: createProject
+      summary: Create a project (owner or admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProjectRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ───────────────────────────── Tasks ─────────────────────────────
+  # Tasks are addressed by their own ID (`/tasks/{taskId}`) instead of
+  # `/workspaces/{w}/projects/{p}/tasks/{t}`: IDs are globally unique UUIDs, and the
+  # server looks up the task's workspace and checks the caller's membership anyway.
+  /projects/{projectId}/tasks:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Tasks]
+      operationId: listTasks
+      summary: Tasks in a project, ordered by status then position
+      parameters:
+        - name: status
+          in: query
+          description: Filter by one or more statuses (`?status=todo&status=in_progress`)
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/TaskStatus' }
+          style: form
+          explode: true
+        - name: assigneeId
+          in: query
+          schema: { type: string, format: uuid }
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaskPage' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create a task (owner, admin or member)
+      description: The new task goes to the bottom of its status column.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTaskRequest' }
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              description: URL of the new task
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /tasks/{taskId}:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: One task
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Change some fields of a task (optimistic locking)
+      description: |
+        Send only the fields you change, plus the `version` you last read.
+        Send `null` to clear a nullable field (e.g. unassign). Omitted fields are untouched.
+        Use `POST /tasks/{taskId}/move` to change status or order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateTaskRequest' }
+      responses:
+        '200':
+          description: Updated; `version` is incremented
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /tasks/{taskId}/move:
+    parameters:
+      - $ref: '#/components/parameters/TaskId'
+    post:
+      tags: [Tasks]
+      operationId: moveTask
+      summary: Move a task to a status and/or position (drag and drop, "Move to")
+      description: |
+        The client says *where* the task goes (between `afterId` and `beforeId`), not a
+        numeric index. The server computes a fractional `position` key between the two
+        neighbours, so only this one row is written — no renumbering of the column.
+        Omit both to move to the bottom of the target status.
+
+        This is a POST action, not a PATCH of `position`, because the server — not the
+        client — owns the position value.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MoveTaskRequest' }
+      responses:
+        '200':
+          description: Moved; `version` is incremented
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Task' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  # ──────────────────────────── Members ────────────────────────────
+  /workspaces/{workspaceId}/members:
+    parameters:
+      - $ref: '#/components/parameters/WorkspaceId'
+    get:
+      tags: [Members]
+      operationId: listMembers
+      summary: Members and pending invitations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [members, invitations]
+                properties:
+                  members:
+                    type: array
+                    items: { $ref: '#/components/schemas/Member' }
+                  invitations:
+                    type: array
+                    items: { $ref: '#/components/schemas/Invitation' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /workspaces/{workspaceId}/invitations:
+    parameters:
+      - $ref: '#/components/parameters/WorkspaceId'
+    post:
+      tags: [Members]
+      operationId: inviteMember
+      summary: Invite someone by email (owner or admin)
+      description: |
+        `projectIds` is required (non-empty) when `role` is `viewer` and must be omitted
+        for other roles — the API answers `422` otherwise. Only an owner can invite an admin.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InviteMemberRequest' }
+      responses:
+        '201':
+          description: Invitation created and email sent
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invitation' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Already a member or already invited
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Short-lived access token (15 min) from login/register/refresh.
+    refreshCookie:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+      description: httpOnly, Secure, SameSite=Strict cookie set by login/register/refresh.
+
+  parameters:
+    WorkspaceId:
+      name: workspaceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Cursor:
+      name: cursor
+      in: query
+      description: Opaque value from a previous page's `nextCursor`. Omit for the first page.
+      schema: { type: string }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+
+  responses:
+    SessionCreated:
+      description: Session started. The refresh token is set as an httpOnly cookie, never in the body.
+      headers:
+        Set-Cookie:
+          description: '`refresh_token=...; HttpOnly; Secure; SameSite=Strict; Path=/api/v1/auth`'
+          schema: { type: string }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Session' }
+    Unauthorized:
+      description: Missing, invalid or expired access token
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Forbidden:
+      description: Authenticated, but the role does not allow this action (e.g. a viewer writing)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Does not exist, or belongs to a workspace/project the caller cannot see
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    ValidationError:
+      description: The body or query is well-formed JSON but breaks a rule
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ValidationProblem' }
+    VersionConflict:
+      description: |
+        The task changed since the client read it (`version` mismatch). The body carries
+        the current task so the client can show "someone else changed this" and let the
+        user re-apply their change.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ConflictProblem' }
+
+  schemas:
+    # ── Errors (RFC 9457) ──
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          description: Stable identifier of the error kind; clients switch on this, not on `detail`.
+          examples: ['https://taskflow.dev/problems/version-conflict']
+        title:
+          type: string
+          description: Short, human-readable summary of the error kind.
+          examples: ['Version conflict']
+        status:
+          type: integer
+          examples: [409]
+        detail:
+          type: string
+          description: Explanation of this occurrence. For humans; may change wording.
+        instance:
+          type: string
+          description: Request path or ID, useful when reporting a bug.
+    ValidationProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [errors]
+          properties:
+            errors:
+              type: array
+              items:
+                type: object
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                    description: JSON pointer-ish path, e.g. `title` or `projectIds`
+                  message:
+                    type: string
+    ConflictProblem:
+      allOf:
+        - $ref: '#/components/schemas/Problem'
+        - type: object
+          required: [current]
+          properties:
+            current: { $ref: '#/components/schemas/Task' }
+
+    # ── Auth & users ──
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, maxLength: 128 }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+    Session:
+      type: object
+      required: [accessToken, expiresIn, user]
+      properties:
+        accessToken: { type: string }
+        expiresIn:
+          type: integer
+          description: Seconds until the access token expires
+          examples: [900]
+        user: { $ref: '#/components/schemas/User' }
+    User:
+      type: object
+      required: [id, name, email]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+        avatarUrl: { type: [string, 'null'], format: uri }
+    UserSummary:
+      description: The few user fields shown next to a task (avatar + name).
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        avatarUrl: { type: [string, 'null'], format: uri }
+    Me:
+      type: object
+      required: [user, workspaces]
+      properties:
+        user: { $ref: '#/components/schemas/User' }
+        workspaces:
+          type: array
+          description: Empty for a brand-new user → the app shows onboarding.
+          items: { $ref: '#/components/schemas/WorkspaceMembership' }
+
+    # ── Workspaces & roles ──
+    Role:
+      type: string
+      enum: [owner, admin, member, viewer]
+    Workspace:
+      type: object
+      required: [id, name, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+    WorkspaceMembership:
+      allOf:
+        - $ref: '#/components/schemas/Workspace'
+        - type: object
+          required: [role]
+          properties:
+            role: { $ref: '#/components/schemas/Role' }
+    CreateWorkspaceRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+
+    # ── Projects ──
+    Project:
+      type: object
+      required: [id, workspaceId, name, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        workspaceId: { type: string, format: uuid }
+        name: { type: string }
+        createdAt: { type: string, format: date-time }
+    CreateProjectRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+
+    # ── Tasks ──
+    TaskStatus:
+      type: string
+      enum: [todo, in_progress, in_review, done]
+    Priority:
+      type: string
+      enum: [low, medium, high]
+    Task:
+      type: object
+      required:
+        [
+          id,
+          projectId,
+          title,
+          description,
+          status,
+          priority,
+          assignee,
+          dueDate,
+          labels,
+          position,
+          version,
+          createdAt,
+          updatedAt,
+        ]
+      properties:
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        priority: { $ref: '#/components/schemas/Priority' }
+        assignee:
+          oneOf:
+            - $ref: '#/components/schemas/UserSummary'
+            - type: 'null'
+        dueDate: { type: [string, 'null'], format: date, examples: ['2026-10-24'] }
+        labels:
+          type: array
+          items: { type: string }
+        position:
+          type: string
+          description: Fractional index (e.g. `a0`, `a0V`). Sort ascending as plain strings; never compute it on the client.
+          examples: [a0V]
+        version:
+          type: integer
+          minimum: 1
+          description: Incremented on every write. Send it back on PATCH/move.
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    TaskPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Task' }
+        nextCursor:
+          type: [string, 'null']
+          description: Pass as `cursor` to get the next page. `null` = last page.
+    CreateTaskRequest:
+      type: object
+      required: [title]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        status:
+          allOf: [{ $ref: '#/components/schemas/TaskStatus' }]
+          default: todo
+        priority:
+          allOf: [{ $ref: '#/components/schemas/Priority' }]
+          default: medium
+        assigneeId: { type: [string, 'null'], format: uuid }
+        dueDate: { type: [string, 'null'], format: date }
+        labels:
+          type: array
+          items: { type: string, maxLength: 30 }
+          maxItems: 10
+    UpdateTaskRequest:
+      type: object
+      required: [version]
+      minProperties: 2
+      properties:
+        version:
+          type: integer
+          description: The `version` of the task the client last read.
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 10000 }
+        priority: { $ref: '#/components/schemas/Priority' }
+        assigneeId: { type: [string, 'null'], format: uuid }
+        dueDate: { type: [string, 'null'], format: date }
+        labels:
+          type: array
+          items: { type: string, maxLength: 30 }
+          maxItems: 10
+    MoveTaskRequest:
+      type: object
+      required: [version, status]
+      properties:
+        version: { type: integer }
+        status: { $ref: '#/components/schemas/TaskStatus' }
+        afterId:
+          type: [string, 'null']
+          format: uuid
+          description: The task that should end up directly above this one (null/omitted = top or bottom).
+        beforeId:
+          type: [string, 'null']
+          format: uuid
+          description: The task that should end up directly below this one.
+
+    # ── Today ──
+    TodayOverview:
+      type: object
+      required: [overdue, dueSoon, counts]
+      properties:
+        overdue:
+          type: array
+          description: Not done, due date before today. Oldest first, max 20.
+          items: { $ref: '#/components/schemas/Task' }
+        dueSoon:
+          type: array
+          description: Not done, due in the next 7 days. Soonest first, max 20.
+          items: { $ref: '#/components/schemas/Task' }
+        counts:
+          type: object
+          required: [overdue, dueSoon, inProgress, unassigned, doneThisWeek]
+          properties:
+            overdue: { type: integer }
+            dueSoon: { type: integer }
+            inProgress: { type: integer }
+            unassigned: { type: integer }
+            doneThisWeek: { type: integer }
+
+    # ── Members ──
+    Member:
+      type: object
+      required: [user, role, projectIds, joinedAt]
+      properties:
+        user: { $ref: '#/components/schemas/UserSummary' }
+        role: { $ref: '#/components/schemas/Role' }
+        projectIds:
+          type: [array, 'null']
+          items: { type: string, format: uuid }
+          description: Projects a viewer can see. `null` for other roles (they see every project).
+        joinedAt: { type: string, format: date-time }
+    Invitation:
+      type: object
+      required: [id, email, role, projectIds, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
+        projectIds:
+          type: [array, 'null']
+          items: { type: string, format: uuid }
+        expiresAt: { type: string, format: date-time }
+    InviteMemberRequest:
+      type: object
+      required: [email, role]
+      properties:
+        email: { type: string, format: email }
+        role:
+          type: string
+          enum: [admin, member, viewer]
+          description: '`owner` cannot be invited; ownership is transferred separately.'
+        projectIds:
+          type: array
+          items: { type: string, format: uuid }
+          minItems: 1
+          description: Required for `viewer`, forbidden for other roles.

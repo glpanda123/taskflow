@@ -11,7 +11,10 @@
   },
   "dependencies": {
     "@taskflow/api-contract": "workspace:*",
+    "fractional-indexing": "^4.0.0",
+    "msw": "^3.0.3",
     "next": "16.4.2",
+    "openapi-msw": "^2.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"
   },
@@ -24,5 +27,10 @@
     "eslint-config-next": "16.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
   }
 }

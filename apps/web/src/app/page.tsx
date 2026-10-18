@@ -1,69 +1,62 @@
-import Image from 'next/image';
+import Link from 'next/link';
+
+// Temporary prototype index. Replaced by Login / Today once the real screens land.
+const statuses = [
+  { label: 'To do', className: 'bg-status-todo' },
+  { label: 'In progress', className: 'bg-status-in-progress' },
+  { label: 'In review', className: 'bg-status-in-review' },
+  { label: 'Done', className: 'bg-status-done' },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{' '}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{' '}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{' '}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{' '}
-            or the{' '}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{' '}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="mx-auto w-full max-w-2xl space-y-6 px-4 py-12">
+      <header className="space-y-2">
+        <p className="text-caption font-medium tracking-wide text-muted-foreground uppercase">
+          Prototype
+        </p>
+        <h1 className="text-title font-semibold">TaskFlow</h1>
+        <p className="text-muted-foreground">
+          Task management for small teams. This build runs on a mock API (MSW), so data lives in
+          your browser tab and resets on reload.
+        </p>
+      </header>
+
+      <section className="space-y-3 rounded-card border border-border bg-card p-6">
+        <h2 className="text-section font-semibold">Try it</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dev"
+            className="inline-flex min-h-touch items-center rounded-control bg-primary px-4 font-medium text-primary-foreground hover:bg-primary-hover"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Open the 409 playground
+          </Link>
+          <Link
+            href="/api-docs"
+            className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-4 font-medium hover:bg-accent"
           >
-            Documentation
-          </a>
+            API contract (Swagger)
+          </Link>
         </div>
-      </main>
-    </div>
+      </section>
+
+      <section className="space-y-3 rounded-card border border-border bg-card p-6">
+        <h2 className="text-section font-semibold">Status colors</h2>
+        <ul className="flex flex-wrap gap-2">
+          {statuses.map((s) => (
+            <li
+              key={s.label}
+              className="inline-flex items-center gap-2 rounded-pill border border-border px-3 py-1 text-caption"
+            >
+              <span aria-hidden className={`size-2.5 rounded-pill ${s.className}`} />
+              {s.label}
+            </li>
+          ))}
+          <li className="inline-flex items-center rounded-pill bg-status-overdue-subtle px-3 py-1 text-caption font-medium text-status-overdue-text">
+            Overdue · 2 days
+          </li>
+        </ul>
+      </section>
+    </main>
   );
 }

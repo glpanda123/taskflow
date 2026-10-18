@@ -4,3 +4,5 @@ pnpm-lock.yaml
 node_modules
 coverage
 packages/api-contract/src/generated
+apps/web/public/mockServiceWorker.js
+apps/web/next-env.d.ts

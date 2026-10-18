@@ -6,6 +6,8 @@ Built contract-first: an OpenAPI spec is the single source of truth for the web 
 
 Status: prototype in progress.
 
+**Live prototype:** https://taskflow-blond-gamma.vercel.app (runs on a mock API, so data lives in your browser tab and resets on reload; try `/dev` for the 409 conflict flow). Every merge to `master` deploys automatically on Vercel; every pull request gets a preview URL.
+
 ## Repository layout
 
 ```

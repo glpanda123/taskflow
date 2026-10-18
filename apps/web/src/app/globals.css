@@ -1,26 +1,111 @@
 @import 'tailwindcss';
 
+/*
+ * Design tokens → CSS variables → Tailwind utilities.
+ *
+ * Values come from the design system (docs/design/tokens.json in the planning repo).
+ * Variable names follow shadcn/ui's convention (--background, --primary, --muted-foreground…)
+ * so shadcn components pick up the theme without changes. TaskFlow-specific tokens
+ * (task status colors) are added under --status-*.
+ *
+ * Light theme only for v1: the tokens define no dark palette, and a half-designed
+ * dark mode is worse than none.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* color.surface / color.text */
+  --background: #f6f7f9; /* surface.ground */
+  --foreground: #17202a; /* text.primary */
+  --card: #ffffff; /* surface.raised */
+  --card-foreground: #17202a;
+  --popover: #ffffff;
+  --popover-foreground: #17202a;
+  --muted: #fafbfc; /* surface.subtle */
+  --muted-foreground: #5b6470; /* text.muted */
+
+  /* color.action */
+  --primary: #3346c8; /* action.primary */
+  --primary-hover: #24339a; /* action.primaryHover */
+  --primary-foreground: #ffffff; /* text.onAction */
+  --accent: #eef0fc; /* action.subtle */
+  --accent-foreground: #24339a;
+  --ring: #9aa6f0; /* action.focusRing */
+
+  /* color.border */
+  --border: #dde1e6; /* border.default */
+  --input: #c9ced6; /* border.control */
+
+  /* color.status */
+  --status-todo: #5b6470;
+  --status-in-progress: #3346c8;
+  --status-in-review: #7a4fd0;
+  --status-done: #18794e;
+  --status-overdue: #b4400f;
+  --status-overdue-text: #8f330c;
+  --status-overdue-subtle: #fceee7;
+
+  /* radius */
+  --radius: 6px; /* radius.control (shadcn's base radius) */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-ring: var(--ring);
+  --color-border: var(--border);
+  --color-input: var(--input);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-status-todo: var(--status-todo);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-in-review: var(--status-in-review);
+  --color-status-done: var(--status-done);
+  --color-status-overdue: var(--status-overdue);
+  --color-status-overdue-text: var(--status-overdue-text);
+  --color-status-overdue-subtle: var(--status-overdue-subtle);
+
+  /* font (loaded with next/font in layout.tsx) */
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+
+  /* fontSize: caption 13 · body 15 · section 18 · title 28 */
+  --text-caption: 13px;
+  --text-caption--line-height: 18px;
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+  --text-section: 18px;
+  --text-section--line-height: 26px;
+  --text-title: 28px;
+  --text-title--line-height: 36px;
+
+  /* radius: control 6 · card 10 · pill */
+  --radius-control: 6px;
+  --radius-card: 10px;
+  --radius-pill: 999px;
+
+  /* minTouchTarget 44 → h-touch / min-h-touch / size-touch */
+  --spacing-touch: 44px;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 22px;
+}
+
+/* Visible keyboard focus everywhere (WCAG 2.4.7), using the token focus ring. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }

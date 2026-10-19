@@ -2,110 +2,75 @@
 
 /**
  * Dev playground for the mock API (temporary — replaced by the real screens).
- * Shows the 409 flow end to end: edit a task while "someone else" edits it too.
- * Plain fetch on purpose; the typed client (openapi-fetch + TanStack Query) comes next.
+ *
+ * Also the reference example for the data layer: reads with a query hook, writes with a
+ * mutation hook, and the 409 conflict handled from the mutation's error.
  */
-import type { ConflictProblem, Problem, Session, Task, TaskPage } from '@taskflow/api-contract';
+import type { Task } from '@taskflow/api-contract';
 import { useEffect, useState } from 'react';
+import { conflictTask, errorMessage } from '@/lib/api/errors';
+import { useTasks, useUpdateTask } from '@/lib/api/queries';
+import { useAuth } from '@/lib/auth/session';
 
 const PROJECT_ID = '00000000-0000-4000-8000-000000000200'; // "Website redesign" in the mock seed
 
-type ApiResult<T> = { ok: true; data: T } | { ok: false; status: number; problem: Problem };
+export default function DevPlayground() {
+  const { status, login } = useAuth();
 
-async function api<T>(
-  path: string,
-  token: string | null,
-  init?: RequestInit,
-): Promise<ApiResult<T>> {
-  const res = await fetch(`/api/v1${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-  const body = res.status === 204 ? null : await res.json();
-  return res.ok
-    ? { ok: true, data: body as T }
-    : { ok: false, status: res.status, problem: body as Problem };
+  // Demo shortcut: log in as the seeded owner. Real pages use <RequireAuth> + the login screen.
+  useEffect(() => {
+    if (status === 'anonymous') void login({ email: 'ly@taskflow.dev', password: 'password123' });
+  }, [status, login]);
+
+  if (status !== 'authenticated') return <p className="p-6 text-muted-foreground">Signing in…</p>;
+  return <TaskEditor />;
 }
 
-export default function DevPlayground() {
-  const [token, setToken] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<Task[]>([]);
+function TaskEditor() {
+  const tasks = useTasks(PROJECT_ID, ['todo', 'in_progress']);
+  const updateTask = useUpdateTask(PROJECT_ID);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [conflict, setConflict] = useState<{ mine: string; current: Task } | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  async function load(t = token) {
-    const res = await api<TaskPage>(
-      `/projects/${PROJECT_ID}/tasks?status=todo&status=in_progress`,
-      t,
+  function save(task: Task, title: string) {
+    updateTask.mutate(
+      { taskId: task.id, version: task.version, title }, // the version we last read
+      {
+        onSuccess: () => setDrafts(({ [task.id]: _saved, ...rest }) => rest),
+        onError: (error) => {
+          const current = conflictTask(error);
+          // Don't retry blindly: show what changed and let the user decide.
+          if (current) setConflict({ mine: title, current });
+        },
+      },
     );
-    if (res.ok) setTasks(res.data.items);
-    else setError(`${res.status} ${res.problem.title}`);
   }
 
-  useEffect(() => {
-    void (async () => {
-      const res = await api<Session>('/auth/login', null, {
-        method: 'POST',
-        body: JSON.stringify({ email: 'ly@taskflow.dev', password: 'password123' }),
-      });
-      if (!res.ok) return setError(res.problem.title);
-      setToken(res.data.accessToken);
-      await load(res.data.accessToken);
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function rename(task: Task, title: string) {
-    setError(null);
-    const res = await api<Task>(`/tasks/${task.id}`, token, {
-      method: 'PATCH',
-      body: JSON.stringify({ version: task.version, title }), // the version we last read
-    });
-    if (res.ok) {
-      setTasks((ts) => ts.map((t) => (t.id === task.id ? res.data : t)));
-    } else if (res.status === 409) {
-      // Don't retry blindly: show what changed and let the user decide.
-      setConflict({ mine: title, current: (res.problem as ConflictProblem).current });
-    } else {
-      setError(`${res.status} ${res.problem.title}`);
-    }
-  }
-
-  async function moveUp(task: Task) {
-    const column = tasks.filter((t) => t.status === task.status);
-    const i = column.findIndex((t) => t.id === task.id);
-    if (i < 1) return;
-    const res = await api<Task>(`/tasks/${task.id}/move`, token, {
-      method: 'POST',
-      // "Put me directly above the task that is currently above me."
-      body: JSON.stringify({
-        version: task.version,
-        status: task.status,
-        beforeId: column[i - 1]!.id,
-      }),
-    });
-    if (res.ok) await load();
-    else setError(`${res.status} ${res.problem.title}`);
-  }
+  if (tasks.isPending) return <p className="p-6 text-muted-foreground">Loading tasks…</p>;
+  if (tasks.isError)
+    return <p className="p-6 text-status-overdue-text">{errorMessage(tasks.error)}</p>;
 
   return (
     <main className="mx-auto w-full max-w-2xl space-y-4 p-6">
-      <h1 className="text-2xl font-semibold">Mock API playground</h1>
-      <p className="text-sm text-zinc-600">
+      <h1 className="text-title font-semibold">Mock API playground</h1>
+      <p className="text-muted-foreground">
         Logged in as Ly (owner). Open <b>Mock API</b> (bottom-right), tick the 409 switch, then save
         a title. Watch the request in DevTools → Network.
       </p>
 
-      {error && <p className="rounded bg-red-50 p-2 text-sm text-red-800">{error}</p>}
+      {updateTask.isError && !conflict && (
+        <p
+          role="alert"
+          className="rounded-control bg-status-overdue-subtle p-2 text-status-overdue-text"
+        >
+          {errorMessage(updateTask.error)}
+        </p>
+      )}
 
       {conflict && (
         <div
           role="alert"
-          className="space-y-2 rounded border border-amber-400 bg-amber-50 p-3 text-sm"
+          className="space-y-2 rounded-card border border-amber-400 bg-amber-50 p-3"
         >
           <p>
             <b>Someone else updated this task.</b> Latest title: “{conflict.current.title}” (version{' '}
@@ -114,21 +79,20 @@ export default function DevPlayground() {
           <div className="flex gap-2">
             <button
               type="button"
-              className="rounded border bg-white px-2 py-1"
-              onClick={async () => {
+              className="rounded-control border border-input bg-card px-3 py-1"
+              onClick={() => {
                 setConflict(null);
-                await rename(conflict.current, conflict.mine); // re-apply on top of the latest version
+                save(conflict.current, conflict.mine); // re-apply on top of the latest version
               }}
             >
               Keep mine
             </button>
             <button
               type="button"
-              className="rounded border bg-white px-2 py-1"
-              onClick={async () => {
-                setConflict(null);
+              className="rounded-control border border-input bg-card px-3 py-1"
+              onClick={() => {
                 setDrafts(({ [conflict.current.id]: _discarded, ...rest }) => rest);
-                await load();
+                setConflict(null);
               }}
             >
               Use theirs
@@ -137,28 +101,29 @@ export default function DevPlayground() {
         </div>
       )}
 
-      <ul className="divide-y rounded border">
-        {tasks.map((task) => (
+      <ul className="divide-y divide-border rounded-card border border-border bg-card">
+        {tasks.data.map((task) => (
           <li key={task.id} className="flex items-center gap-2 p-2">
-            <span className="w-24 shrink-0 text-xs text-zinc-500">
+            <span className="w-24 shrink-0 text-caption text-muted-foreground">
               {task.status} · {task.position}
             </span>
             <input
-              className="flex-1 rounded border px-2 py-1"
+              aria-label={`Title of ${task.title}`}
+              className="flex-1 rounded-control border border-input px-2 py-1"
               value={drafts[task.id] ?? task.title}
               onChange={(e) => setDrafts((d) => ({ ...d, [task.id]: e.target.value }))}
             />
             <button
               type="button"
-              className="rounded border px-2 py-1"
-              onClick={() => rename(task, drafts[task.id] ?? task.title)}
+              className="rounded-control border border-input px-3 py-1 disabled:opacity-50"
+              disabled={updateTask.isPending}
+              onClick={() => save(task, drafts[task.id] ?? task.title)}
             >
               Save
             </button>
-            <button type="button" className="rounded border px-2 py-1" onClick={() => moveUp(task)}>
-              ↑
-            </button>
-            <span className="w-8 text-right text-xs text-zinc-500">v{task.version}</span>
+            <span className="w-8 text-right text-caption text-muted-foreground">
+              v{task.version}
+            </span>
           </li>
         ))}
       </ul>

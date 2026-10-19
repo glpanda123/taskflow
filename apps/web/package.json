@@ -10,10 +10,12 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.4",
     "@taskflow/api-contract": "workspace:*",
     "fractional-indexing": "^4.0.0",
     "msw": "^3.0.3",
     "next": "16.4.2",
+    "openapi-fetch": "^0.17.0",
     "openapi-msw": "^2.1.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"

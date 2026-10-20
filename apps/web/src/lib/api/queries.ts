@@ -9,10 +9,12 @@ import type {
   CreateProjectRequest,
   CreateTaskRequest,
   CreateWorkspaceRequest,
+  InviteMemberRequest,
+  MoveTaskRequest,
   TaskStatus,
   UpdateTaskRequest,
 } from '@taskflow/api-contract';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api } from './client';
 import { unwrap } from './errors';
 
@@ -33,6 +35,35 @@ export const meQuery = { queryKey: qk.me, queryFn: () => unwrap(api.GET('/me')) 
 
 export function useMe(enabled = true) {
   return useQuery({ ...meQuery, enabled });
+}
+
+/**
+ * The workspace the user is working in, with their role in it.
+ * v1 has one workspace per user in practice; a switcher comes later.
+ */
+export function useCurrentWorkspace() {
+  const me = useMe();
+  const membership = me.data?.workspaces[0];
+  return {
+    ...me,
+    workspace: membership,
+    role: membership?.role,
+    canEditTasks: membership !== undefined && membership.role !== 'viewer',
+    canManage: membership?.role === 'owner' || membership?.role === 'admin',
+  };
+}
+
+export function useMembers(workspaceId: string | undefined) {
+  return useQuery({
+    queryKey: qk.members(workspaceId ?? ''),
+    queryFn: () =>
+      unwrap(
+        api.GET('/workspaces/{workspaceId}/members', {
+          params: { path: { workspaceId: workspaceId! } },
+        }),
+      ),
+    enabled: !!workspaceId,
+  });
 }
 
 export function useProjects(workspaceId: string | undefined) {
@@ -82,6 +113,14 @@ export function useTasks(projectId: string | undefined, status?: TaskStatus[]) {
 
 // ── Writes ─────────────────────────────────────────────────────────────────
 
+/** A task write changes the project's lists and the Today overview counts. */
+function invalidateTaskViews(qc: QueryClient, projectId: string) {
+  void qc.invalidateQueries({ queryKey: qk.allTasksOf(projectId) });
+  void qc.invalidateQueries({
+    predicate: (q) => q.queryKey[0] === 'workspaces' && q.queryKey[2] === 'today',
+  });
+}
+
 export function useCreateWorkspace() {
   const qc = useQueryClient();
   return useMutation({
@@ -107,7 +146,7 @@ export function useCreateTask(projectId: string) {
   return useMutation({
     mutationFn: (body: CreateTaskRequest) =>
       unwrap(api.POST('/projects/{projectId}/tasks', { params: { path: { projectId } }, body })),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.allTasksOf(projectId) }),
+    onSuccess: () => invalidateTaskViews(qc, projectId),
   });
 }
 
@@ -120,6 +159,30 @@ export function useUpdateTask(projectId: string) {
   return useMutation({
     mutationFn: ({ taskId, ...body }: UpdateTaskRequest & { taskId: string }) =>
       unwrap(api.PATCH('/tasks/{taskId}', { params: { path: { taskId } }, body })),
-    onSettled: () => qc.invalidateQueries({ queryKey: qk.allTasksOf(projectId) }),
+    onSettled: () => invalidateTaskViews(qc, projectId),
+  });
+}
+
+/** Move to a status (bottom of the column, or between afterId/beforeId). 409 like PATCH. */
+export function useMoveTask(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, ...body }: MoveTaskRequest & { taskId: string }) =>
+      unwrap(api.POST('/tasks/{taskId}/move', { params: { path: { taskId } }, body })),
+    onSettled: () => invalidateTaskViews(qc, projectId),
+  });
+}
+
+export function useInviteMember(workspaceId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: InviteMemberRequest) =>
+      unwrap(
+        api.POST('/workspaces/{workspaceId}/invitations', {
+          params: { path: { workspaceId } },
+          body,
+        }),
+      ),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.members(workspaceId) }),
   });
 }

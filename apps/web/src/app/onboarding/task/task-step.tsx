@@ -13,14 +13,7 @@ import { Button, FormError } from '@/components/ui/button';
 import { Field, SelectField } from '@/components/ui/field';
 import { errorMessage, fieldErrors } from '@/lib/api/errors';
 import { useCreateTask } from '@/lib/api/queries';
-
-const statusLabel: Record<TaskStatus, string> = {
-  todo: 'To do',
-  in_progress: 'In progress',
-  in_review: 'In review',
-  done: 'Done',
-};
-const priorityLabel: Record<Priority, string> = { low: 'Low', medium: 'Medium', high: 'High' };
+import { priorityLabel, statusLabel } from '@/lib/format';
 
 export function TaskStep() {
   const router = useRouter();

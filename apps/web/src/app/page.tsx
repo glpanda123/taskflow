@@ -26,10 +26,22 @@ export default function Home() {
         <h2 className="text-section font-semibold">Try it</h2>
         <div className="flex flex-wrap gap-3">
           <Link
-            href="/dev"
+            href="/signup"
             className="inline-flex min-h-touch items-center rounded-control bg-primary px-4 font-medium text-primary-foreground hover:bg-primary-hover"
           >
-            Open the 409 playground
+            Create an account
+          </Link>
+          <Link
+            href="/login"
+            className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-4 font-medium hover:bg-accent"
+          >
+            Log in
+          </Link>
+          <Link
+            href="/dev"
+            className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-4 font-medium hover:bg-accent"
+          >
+            409 playground
           </Link>
           <Link
             href="/api-docs"

@@ -28,8 +28,11 @@ export const qk = {
 
 // ── Reads ──────────────────────────────────────────────────────────────────
 
+/** Shared so non-hook code (e.g. after login) can `queryClient.fetchQuery(meQuery)`. */
+export const meQuery = { queryKey: qk.me, queryFn: () => unwrap(api.GET('/me')) };
+
 export function useMe(enabled = true) {
-  return useQuery({ queryKey: qk.me, queryFn: () => unwrap(api.GET('/me')), enabled });
+  return useQuery({ ...meQuery, enabled });
 }
 
 export function useProjects(workspaceId: string | undefined) {

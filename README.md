@@ -4,7 +4,7 @@ Multi-tenant task manager for small teams (3–15 people): workspaces, role-base
 
 Built contract-first: an OpenAPI spec is the single source of truth for the web app, the mock API and (later) the NestJS backend.
 
-Status: prototype in progress.
+Status: prototype in progress. **Build status:** https://taskflow-blond-gamma.vercel.app/status (data: `apps/web/src/content/progress.json`, updated at the end of each session).
 
 **Live prototype:** https://taskflow-blond-gamma.vercel.app (runs on a mock API, so data lives in your browser tab and resets on reload; try `/dev` for the 409 conflict flow). Every merge to `master` deploys automatically on Vercel; every pull request gets a preview URL.
 

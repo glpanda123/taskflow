@@ -44,6 +44,12 @@ export default function Home() {
             409 playground
           </Link>
           <Link
+            href="/status"
+            className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-4 font-medium hover:bg-accent"
+          >
+            Build status
+          </Link>
+          <Link
             href="/api-docs"
             className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-4 font-medium hover:bg-accent"
           >

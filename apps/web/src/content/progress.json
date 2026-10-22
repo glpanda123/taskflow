@@ -1,0 +1,354 @@
+{
+  "updatedAt": "2026-10-22",
+  "title": "TaskFlow build status",
+  "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
+  "startDate": "2026-10-14",
+  "endDate": "2026-11-10",
+  "currentStageId": "problem",
+  "today": {
+    "date": "2026-10-22",
+    "focus": "Stage 1 — why TaskFlow is worth building",
+    "items": [
+      {
+        "label": "Business brief: problem, customers, competitors, model, metrics, risks",
+        "done": true
+      },
+      {
+        "label": "Public /status page (this page)",
+        "done": true
+      },
+      {
+        "label": "Lock v1 scope and the v1.1 roadmap",
+        "done": false
+      },
+      {
+        "label": "Gate: 60-second pitch in English",
+        "done": false
+      }
+    ]
+  },
+  "stages": [
+    {
+      "id": "foundations",
+      "name": "Foundations",
+      "dates": "Oct 14–21",
+      "weight": 15,
+      "summary": "Requirements, design system, API contract and a clickable prototype on a mock API.",
+      "items": [
+        {
+          "label": "PRD, user flow, wireframes",
+          "done": true
+        },
+        {
+          "label": "Hi-fi mockup (12 screens) + design tokens",
+          "done": true
+        },
+        {
+          "label": "Monorepo, CI, OpenAPI 3.1 contract with generated types",
+          "done": true
+        },
+        {
+          "label": "Typed mock API (MSW): RBAC, 409 conflicts, fractional ordering",
+          "done": true
+        },
+        {
+          "label": "Auth, onboarding, Today, Project and Members screens",
+          "done": true
+        },
+        {
+          "label": "Deployed on Vercel with a preview per pull request",
+          "done": true
+        }
+      ]
+    },
+    {
+      "id": "problem",
+      "name": "Problem & idea",
+      "dates": "Oct 22",
+      "weight": 5,
+      "summary": "Is it worth building? Problem with evidence, target customers, competitors, business model, metrics, risks.",
+      "gate": "60-second pitch in English",
+      "items": [
+        {
+          "label": "One-page business brief",
+          "done": true
+        },
+        {
+          "label": "Public status page",
+          "done": true
+        },
+        {
+          "label": "v1 scope + v1.1 roadmap locked",
+          "done": false
+        },
+        {
+          "label": "Pitch passes the gate",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "prototype",
+      "name": "Prototype & present",
+      "dates": "Oct 23–25",
+      "weight": 15,
+      "summary": "Do users want it? A polished prototype with every v1 feature on mock data, then a live demo.",
+      "gate": "Feedback from a mentor and 2–3 team leads; UI frozen afterwards",
+      "items": [
+        {
+          "label": "Visual v2 + landing page",
+          "done": false
+        },
+        {
+          "label": "Kanban drag and drop (keyboard accessible)",
+          "done": false
+        },
+        {
+          "label": "Simulated live updates from teammates",
+          "done": false
+        },
+        {
+          "label": "AI task drafting (mock)",
+          "done": false
+        },
+        {
+          "label": "Demo data, pitch deck, 2-minute demo video",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "name": "System design",
+      "dates": "Oct 26–28",
+      "weight": 15,
+      "summary": "How do we build it? Architecture for all of v1, including what ships after the core.",
+      "gate": "10-minute design review without notes",
+      "items": [
+        {
+          "label": "C4 diagrams (context, containers) + ERD",
+          "done": false
+        },
+        {
+          "label": "Sequence diagrams: realtime across instances, AI drafting",
+          "done": false
+        },
+        {
+          "label": "ADRs: backend stack, infrastructure",
+          "done": false
+        },
+        {
+          "label": "Contract updated for AI drafts and realtime events",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "core",
+      "name": "Backend core",
+      "dates": "Oct 29 – Nov 3",
+      "weight": 30,
+      "summary": "Make it real, test first: the prototype switches from the mock to the real API.",
+      "gate": "Main screens run on the real API in production",
+      "items": [
+        {
+          "label": "Quality guardrails: lint, hooks, CI gates",
+          "done": false
+        },
+        {
+          "label": "Auth with refresh-token rotation",
+          "done": false
+        },
+        {
+          "label": "Workspaces, roles, tenant isolation tests",
+          "done": false
+        },
+        {
+          "label": "Tasks: optimistic locking (409), ordering",
+          "done": false
+        },
+        {
+          "label": "Realtime over Redis pub/sub",
+          "done": false
+        },
+        {
+          "label": "Frontend on the real API, API deployed",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "hardening",
+      "name": "Hardening",
+      "dates": "Nov 4 →",
+      "weight": 20,
+      "summary": "The rest of v1, in priority order.",
+      "items": [
+        {
+          "label": "Redis cache, login rate limiting, email queue, outbox",
+          "done": false
+        },
+        {
+          "label": "AI drafting on a real LLM, with evals in CI",
+          "done": false
+        },
+        {
+          "label": "MCP server + agent skill for TaskFlow",
+          "done": false
+        },
+        {
+          "label": "AWS deploy, then Terraform",
+          "done": false
+        }
+      ]
+    }
+  ],
+  "days": [
+    {
+      "date": "2026-10-14",
+      "status": "shipped",
+      "summary": "PRD, user flow, wireframes"
+    },
+    {
+      "date": "2026-10-15",
+      "status": "shipped",
+      "summary": "Hi-fi mockup (12 screens), design tokens"
+    },
+    {
+      "date": "2026-10-16",
+      "status": "shipped",
+      "summary": "Persona walkthrough, mockup v2, system design basics"
+    },
+    {
+      "date": "2026-10-17",
+      "status": "shipped",
+      "summary": "Monorepo, CI, OpenAPI contract"
+    },
+    {
+      "date": "2026-10-18",
+      "status": "shipped",
+      "summary": "Typed mock API, theme, Vercel deploy"
+    },
+    {
+      "date": "2026-10-19",
+      "status": "shipped",
+      "summary": "Data layer, auth and onboarding screens"
+    },
+    {
+      "date": "2026-10-20",
+      "status": "shipped",
+      "summary": "Today, Project and Members screens"
+    },
+    {
+      "date": "2026-10-21",
+      "status": "rest",
+      "summary": "Rest day"
+    },
+    {
+      "date": "2026-10-22",
+      "status": "in_progress",
+      "summary": "Stage 1: business brief, status page"
+    },
+    {
+      "date": "2026-10-23",
+      "status": "planned",
+      "summary": "Visual v2 + landing page"
+    },
+    {
+      "date": "2026-10-24",
+      "status": "planned",
+      "summary": "Kanban drag and drop, live updates, AI drafting (mock)"
+    },
+    {
+      "date": "2026-10-25",
+      "status": "planned",
+      "summary": "Demo data, pitch deck, demo video"
+    },
+    {
+      "date": "2026-10-26",
+      "status": "planned",
+      "summary": "C4 diagrams + ERD"
+    },
+    {
+      "date": "2026-10-27",
+      "status": "planned",
+      "summary": "Sequence diagrams + design critique"
+    },
+    {
+      "date": "2026-10-28",
+      "status": "planned",
+      "summary": "ADRs + contract update"
+    },
+    {
+      "date": "2026-10-29",
+      "status": "planned",
+      "summary": "Quality guardrails"
+    },
+    {
+      "date": "2026-10-30",
+      "status": "planned",
+      "summary": "Backend: auth"
+    },
+    {
+      "date": "2026-10-31",
+      "status": "planned",
+      "summary": "Backend: roles + tenant isolation"
+    },
+    {
+      "date": "2026-11-01",
+      "status": "planned",
+      "summary": "Backend: tasks, 409, ordering"
+    },
+    {
+      "date": "2026-11-02",
+      "status": "planned",
+      "summary": "Backend: realtime"
+    },
+    {
+      "date": "2026-11-03",
+      "status": "planned",
+      "summary": "Frontend on the real API, deploy"
+    }
+  ],
+  "log": [
+    {
+      "date": "2026-10-22",
+      "title": "New process: stages with gates",
+      "body": "After mentor feedback, work now moves in stages — problem, prototype, system design, code — each closed by a gate. Wrote the business brief and shipped this page."
+    },
+    {
+      "date": "2026-10-20",
+      "title": "Today, Project and Members screens",
+      "body": "Overview of late and due-soon work, project task list with detail panel and edit-conflict handling, member invites with per-project client viewers. 13 Playwright checks."
+    },
+    {
+      "date": "2026-10-19",
+      "title": "Typed data layer and auth screens",
+      "body": "openapi-fetch + TanStack Query typed from the contract; access token in memory, refresh token in an httpOnly cookie; sign-up and onboarding flow."
+    },
+    {
+      "date": "2026-10-18",
+      "title": "Mock API and first deploy",
+      "body": "MSW handlers typed from the OpenAPI contract: roles, 409 on concurrent edits, fractional-index ordering. Deployed to Vercel."
+    },
+    {
+      "date": "2026-10-17",
+      "title": "Monorepo and API contract",
+      "body": "pnpm + Turborepo + Next.js 16. OpenAPI 3.1 contract with generated TypeScript types and a CI check that they stay in sync."
+    }
+  ],
+  "links": [
+    {
+      "label": "Live prototype",
+      "href": "/"
+    },
+    {
+      "label": "API contract",
+      "href": "/api-docs"
+    },
+    {
+      "label": "Source on GitHub",
+      "href": "https://github.com/glpanda123/taskflow"
+    }
+  ]
+}

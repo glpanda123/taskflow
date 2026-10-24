@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { Button, FormError } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { Field } from '@/components/ui/field';
 import { ApiError, errorMessage, fieldErrors } from '@/lib/api/errors';
 import { meQuery } from '@/lib/api/queries';
 import { useAuth } from '@/lib/auth/session';
+import { demoAccount } from '@/lib/demo';
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -63,6 +65,22 @@ export function LoginForm() {
         pendingLabel="Logging in…"
       >
         Log in
+      </Button>
+
+      <div className="flex items-center gap-3 text-caption text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        or
+        <span className="h-px flex-1 bg-border" />
+      </div>
+      <Button
+        type="button"
+        variant="secondary"
+        className="w-full gap-2"
+        disabled={submit.isPending}
+        onClick={() => submit.mutate(demoAccount)}
+      >
+        <Sparkles aria-hidden className="size-4 text-primary" />
+        Explore the demo studio
       </Button>
 
       <p className="rounded-control bg-muted px-3 py-2 text-caption text-muted-foreground">

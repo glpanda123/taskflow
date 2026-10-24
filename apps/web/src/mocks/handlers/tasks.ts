@@ -17,6 +17,7 @@ import {
   unauthorized,
   validationProblem,
 } from '../http';
+import { diffTask, recordActivity } from '../activity';
 import { consume } from '../scenario';
 
 export const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
@@ -44,9 +45,12 @@ export function workspaceOfProject(projectId: string) {
  */
 function maybeSimulateConcurrentEdit(task: Task) {
   if (!consume('conflictNext')) return;
+  const before = { ...task };
   task.title = `${task.title} (edited by Minh)`;
   task.version += 1;
   task.updatedAt = now();
+  const minh = db.users.find((u) => u.email === 'minh@taskflow.dev');
+  if (minh) recordActivity('task.updated', minh.id, task, diffTask(before, task));
 }
 
 export const taskHandlers = [
@@ -113,6 +117,7 @@ export const taskHandlers = [
       updatedAt: now(),
     };
     db.tasks.push(task);
+    recordActivity('task.created', caller.userId, task);
     return response(201).json(task, { headers: { Location: `/api/v1/tasks/${task.id}` } });
   }),
 
@@ -165,6 +170,7 @@ export const taskHandlers = [
     }
 
     // 2. Apply only the fields that were sent. `undefined` = untouched, `null` = clear.
+    const before = { ...task };
     const { version: _clientVersion, assigneeId, ...fields } = body;
     if (assigneeId !== undefined) {
       const user = assigneeId ? db.users.find((u) => u.id === assigneeId) : null;
@@ -177,6 +183,8 @@ export const taskHandlers = [
     // 3. Every successful write bumps the version.
     task.version += 1;
     task.updatedAt = now();
+    const changes = diffTask(before, task);
+    if (changes.length > 0) recordActivity('task.updated', caller.userId, task, changes);
     return response(200).json(task);
   }),
 
@@ -236,10 +244,17 @@ export const taskHandlers = [
       lower = target.at(-1)?.position ?? null;
       upper = null;
     }
+    const from = task.status;
     task.position = generateKeyBetween(lower, upper);
     task.status = body.status;
     task.version += 1;
     task.updatedAt = now();
+    // Reordering inside a column isn't worth a log line; changing column is.
+    if (from !== task.status) {
+      recordActivity('task.moved', caller.userId, task, [
+        { field: 'status', from, to: task.status },
+      ]);
+    }
     return response(200).json(task);
   }),
 ];

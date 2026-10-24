@@ -47,6 +47,10 @@ tags:
     description: Tasks, including ordering and status changes
   - name: Members
     description: Who belongs to a workspace, with which role
+  - name: Activity
+    description: Who changed what, when (draft — reviewed in Stage 3)
+  - name: AI
+    description: AI-assisted task drafting (draft — reviewed in Stage 3)
 
 paths:
   # ───────────────────────────── Auth ─────────────────────────────
@@ -375,6 +379,64 @@ paths:
         '422':
           $ref: '#/components/responses/ValidationError'
 
+  /projects/{projectId}/activity:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [Activity]
+      operationId: listProjectActivity
+      summary: Activity log of a project, newest first
+      description: |
+        Every task create, edit and move is recorded with its actor. Visible to everyone
+        who can see the project, viewers included.
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ActivityPage' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /projects/{projectId}/task-drafts:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [AI]
+      operationId: draftTasks
+      summary: Draft tasks from free text (owner, admin or member)
+      description: |
+        Turns a brief ("we launch the landing page next Friday…") into structured task
+        drafts. Nothing is saved: the client shows the drafts, the user edits and picks,
+        then creates the chosen ones with `createTask`. Output is validated against
+        `TaskDraft` before it is returned.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DraftTasksRequest' }
+      responses:
+        '200':
+          description: Drafts to review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DraftTasksResponse' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
   # ──────────────────────────── Members ────────────────────────────
   /workspaces/{workspaceId}/members:
     parameters:
@@ -507,6 +569,15 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/ValidationProblem' }
+    RateLimited:
+      description: Too many requests; try again after `Retry-After` seconds
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
     VersionConflict:
       description: |
         The task changed since the client read it (`version` mismatch). The body carries
@@ -763,6 +834,75 @@ components:
           type: [string, 'null']
           format: uuid
           description: The task that should end up directly below this one.
+
+    # ── Activity ──
+    ActivityEvent:
+      type: object
+      required: [id, projectId, type, actor, task, changes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        projectId: { type: string, format: uuid }
+        type:
+          type: string
+          enum: [task.created, task.updated, task.moved]
+        actor: { $ref: '#/components/schemas/UserSummary' }
+        task:
+          description: The task as it was named at the time of the event
+          type: object
+          required: [id, title]
+          properties:
+            id: { type: string, format: uuid }
+            title: { type: string }
+        changes:
+          description: Field-level changes (empty for task.created)
+          type: array
+          items: { $ref: '#/components/schemas/FieldChange' }
+        createdAt: { type: string, format: date-time }
+    FieldChange:
+      type: object
+      required: [field, from, to]
+      properties:
+        field:
+          type: string
+          enum: [title, description, status, priority, assignee, dueDate]
+        from: { type: [string, 'null'], description: 'Display value before (status key, user name, date…)' }
+        to: { type: [string, 'null'] }
+    ActivityPage:
+      type: object
+      required: [items, nextCursor]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/ActivityEvent' }
+        nextCursor:
+          type: [string, 'null']
+
+    # ── AI drafting ──
+    DraftTasksRequest:
+      type: object
+      required: [text]
+      properties:
+        text:
+          type: string
+          minLength: 10
+          maxLength: 4000
+          description: The brief to turn into tasks
+    TaskDraft:
+      type: object
+      required: [title, description, priority, dueDate]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 2000 }
+        priority: { $ref: '#/components/schemas/Priority' }
+        dueDate: { type: [string, 'null'], format: date }
+    DraftTasksResponse:
+      type: object
+      required: [drafts]
+      properties:
+        drafts:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/TaskDraft' }
 
     # ── Today ──
     TodayOverview:

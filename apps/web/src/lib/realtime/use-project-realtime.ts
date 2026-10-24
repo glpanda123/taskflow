@@ -6,9 +6,7 @@ import { putTaskInCache } from '@/lib/api/queries';
 import { getAccessToken } from '@/lib/auth/token';
 import { REALTIME_PATH, type Actor, type ServerMessage } from './protocol';
 
-export type TaskEvent = Extract<ServerMessage, { type: 'task.changed' }> & { key: number };
-
-let eventKey = 0;
+export type TaskEvent = Extract<ServerMessage, { type: 'task.changed' }>;
 
 /**
  * Live updates for one project: who else is here, and tasks changed by someone else.
@@ -41,7 +39,7 @@ export function useProjectRealtime(projectId: string, onEvent?: (event: TaskEven
       if (message.type === 'presence' && message.projectId === projectId) setOnline(message.users);
       if (message.type === 'task.changed' && message.projectId === projectId) {
         putTaskInCache(qc, message.task);
-        onEventRef.current?.({ ...message, key: ++eventKey });
+        onEventRef.current?.(message);
       }
     });
 

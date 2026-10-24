@@ -232,6 +232,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{projectId}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Activity log of a project, newest first
+         * @description Every task create, edit and move is recorded with its actor. Visible to everyone
+         *     who can see the project, viewers included.
+         */
+        get: operations["listProjectActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{projectId}/task-drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft tasks from free text (owner, admin or member)
+         * @description Turns a brief ("we launch the landing page next Friday…") into structured task
+         *     drafts. Nothing is saved: the client shows the drafts, the user edits and picks,
+         *     then creates the chosen ones with `createTask`. Output is validated against
+         *     `TaskDraft` before it is returned.
+         */
+        post: operations["draftTasks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/workspaces/{workspaceId}/members": {
         parameters: {
             query?: never;
@@ -452,6 +500,50 @@ export interface components {
              */
             beforeId?: string | null;
         };
+        ActivityEvent: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            projectId: string;
+            /** @enum {string} */
+            type: "task.created" | "task.updated" | "task.moved";
+            actor: components["schemas"]["UserSummary"];
+            /** @description The task as it was named at the time of the event */
+            task: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            };
+            /** @description Field-level changes (empty for task.created) */
+            changes: components["schemas"]["FieldChange"][];
+            /** Format: date-time */
+            createdAt: string;
+        };
+        FieldChange: {
+            /** @enum {string} */
+            field: "title" | "description" | "status" | "priority" | "assignee" | "dueDate";
+            /** @description Display value before (status key, user name, date…) */
+            from: string | null;
+            to: string | null;
+        };
+        ActivityPage: {
+            items: components["schemas"]["ActivityEvent"][];
+            nextCursor: string | null;
+        };
+        DraftTasksRequest: {
+            /** @description The brief to turn into tasks */
+            text: string;
+        };
+        TaskDraft: {
+            title: string;
+            description: string | null;
+            priority: components["schemas"]["Priority"];
+            /** Format: date */
+            dueDate: string | null;
+        };
+        DraftTasksResponse: {
+            drafts: components["schemas"]["TaskDraft"][];
+        };
         TodayOverview: {
             /** @description Not done, due date before today. Oldest first, max 20. */
             overdue: components["schemas"]["Task"][];
@@ -543,6 +635,17 @@ export interface components {
                 "application/problem+json": components["schemas"]["ValidationProblem"];
             };
         };
+        /** @description Too many requests; try again after `Retry-After` seconds */
+        RateLimited: {
+            headers: {
+                /** @description Seconds to wait before retrying */
+                "Retry-After"?: number;
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /**
          * @description The task changed since the client read it (`version` mismatch). The body carries
          *     the current task so the client can show "someone else changed this" and let the
@@ -591,6 +694,12 @@ export type TaskPage = components['schemas']['TaskPage'];
 export type CreateTaskRequest = components['schemas']['CreateTaskRequest'];
 export type UpdateTaskRequest = components['schemas']['UpdateTaskRequest'];
 export type MoveTaskRequest = components['schemas']['MoveTaskRequest'];
+export type ActivityEvent = components['schemas']['ActivityEvent'];
+export type FieldChange = components['schemas']['FieldChange'];
+export type ActivityPage = components['schemas']['ActivityPage'];
+export type DraftTasksRequest = components['schemas']['DraftTasksRequest'];
+export type TaskDraft = components['schemas']['TaskDraft'];
+export type DraftTasksResponse = components['schemas']['DraftTasksResponse'];
 export type TodayOverview = components['schemas']['TodayOverview'];
 export type Member = components['schemas']['Member'];
 export type Invitation = components['schemas']['Invitation'];
@@ -600,6 +709,7 @@ export type ResponseUnauthorized = components['responses']['Unauthorized'];
 export type ResponseForbidden = components['responses']['Forbidden'];
 export type ResponseNotFound = components['responses']['NotFound'];
 export type ResponseValidationError = components['responses']['ValidationError'];
+export type ResponseRateLimited = components['responses']['RateLimited'];
 export type ResponseVersionConflict = components['responses']['VersionConflict'];
 export type ParameterWorkspaceId = components['parameters']['WorkspaceId'];
 export type ParameterProjectId = components['parameters']['ProjectId'];
@@ -967,6 +1077,65 @@ export interface operations {
             422: components["responses"]["ValidationError"];
         };
     };
+    listProjectActivity: {
+        parameters: {
+            query?: {
+                /** @description Opaque value from a previous page's `nextCursor`. Omit for the first page. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path: {
+                projectId: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ActivityPage"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    draftTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                projectId: components["parameters"]["ProjectId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftTasksRequest"];
+            };
+        };
+        responses: {
+            /** @description Drafts to review */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DraftTasksResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
     listMembers: {
         parameters: {
             query?: never;
@@ -1045,4 +1214,6 @@ type ReadonlyArray<T> = [
 export const roleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Role"]> = ["owner", "admin", "member", "viewer"];
 export const taskStatusValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["TaskStatus"]> = ["todo", "in_progress", "in_review", "done"];
 export const priorityValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["Priority"]> = ["low", "medium", "high"];
+export const activityEventTypeValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["ActivityEvent"]["type"]> = ["task.created", "task.updated", "task.moved"];
+export const fieldChangeFieldValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["FieldChange"]["field"]> = ["title", "description", "status", "priority", "assignee", "dueDate"];
 export const inviteMemberRequestRoleValues: ReadonlyArray<FlattenedDeepRequired<components>["schemas"]["InviteMemberRequest"]["role"]> = ["admin", "member", "viewer"];

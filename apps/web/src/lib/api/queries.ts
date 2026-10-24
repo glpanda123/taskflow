@@ -11,6 +11,8 @@ import type {
   CreateWorkspaceRequest,
   InviteMemberRequest,
   MoveTaskRequest,
+  Task,
+  TaskPage,
   TaskStatus,
   UpdateTaskRequest,
 } from '@taskflow/api-contract';
@@ -121,6 +123,33 @@ function invalidateTaskViews(qc: QueryClient, projectId: string) {
   });
 }
 
+const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
+
+/** Same order the API returns: status column, then fractional position. */
+export function byBoardOrder(a: Task, b: Task): number {
+  const s = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
+  if (s !== 0) return s;
+  return a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
+}
+
+/**
+ * Put a task straight into the cached lists (a realtime push, a move's response, or an
+ * optimistic move) instead of refetching, so the board updates without a flicker.
+ * Today's counts are cheap to refetch.
+ */
+export function putTaskInCache(qc: QueryClient, task: Task) {
+  qc.setQueriesData<TaskPage>({ queryKey: qk.allTasksOf(task.projectId) }, (page) => {
+    if (!page) return page;
+    const items = page.items.some((t) => t.id === task.id)
+      ? page.items.map((t) => (t.id === task.id ? task : t))
+      : [...page.items, task];
+    return { ...page, items: items.sort(byBoardOrder) };
+  });
+  void qc.invalidateQueries({
+    predicate: (q) => q.queryKey[0] === 'workspaces' && q.queryKey[2] === 'today',
+  });
+}
+
 export function useCreateWorkspace() {
   const qc = useQueryClient();
   return useMutation({
@@ -169,6 +198,8 @@ export function useMoveTask(projectId: string) {
   return useMutation({
     mutationFn: ({ taskId, ...body }: MoveTaskRequest & { taskId: string }) =>
       unwrap(api.POST('/tasks/{taskId}/move', { params: { path: { taskId } }, body })),
+    // The response has the new version: cache it at once so a quick second drag isn't a 409.
+    onSuccess: (task) => putTaskInCache(qc, task),
     onSettled: () => invalidateTaskViews(qc, projectId),
   });
 }

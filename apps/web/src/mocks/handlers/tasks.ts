@@ -19,22 +19,22 @@ import {
 } from '../http';
 import { consume } from '../scenario';
 
-const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
+export const STATUS_ORDER: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
 
 /** Board order: by status column, then by fractional position (plain string compare). */
-function byBoardOrder(a: Task, b: Task) {
+export function byBoardOrder(a: Task, b: Task) {
   const s = STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status);
   if (s !== 0) return s;
   return a.position < b.position ? -1 : a.position > b.position ? 1 : 0;
 }
 
-function column(projectId: string, status: TaskStatus) {
+export function column(projectId: string, status: TaskStatus) {
   return db.tasks
     .filter((t) => t.projectId === projectId && t.status === status)
     .sort(byBoardOrder);
 }
 
-function workspaceOfProject(projectId: string) {
+export function workspaceOfProject(projectId: string) {
   return db.projects.find((p) => p.id === projectId)?.workspaceId ?? null;
 }
 

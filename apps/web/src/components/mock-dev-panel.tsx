@@ -46,6 +46,15 @@ export function MockDevPanel() {
           <label className="flex items-center gap-2">
             <input
               type="checkbox"
+              checked={s.teammates}
+              onChange={(e) => setScenario({ teammates: e.target.checked })}
+            />
+            Virtual teammates move tasks (realtime)
+          </label>
+
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
               checked={s.conflictNext}
               onChange={(e) => setScenario({ conflictNext: e.target.checked })}
             />

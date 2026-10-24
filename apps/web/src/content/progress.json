@@ -10,16 +10,20 @@
     "focus": "Stage 2 — a prototype worth presenting",
     "items": [
       {
-        "label": "Lock v1 scope and the v1.1 roadmap",
+        "label": "Visual v2 + landing page with one-click demo",
         "done": true
       },
       {
-        "label": "Visual v2: sidebar, Today, sign-in",
+        "label": "Kanban board: drag and drop, keyboard and screen reader support",
         "done": true
       },
       {
-        "label": "Landing page with one-click demo",
+        "label": "Live updates over WebSocket (virtual teammates on the mock)",
         "done": true
+      },
+      {
+        "label": "AI task drafting + activity log",
+        "done": false
       },
       {
         "label": "Stage 1 gate: 60-second pitch in English",
@@ -101,11 +105,11 @@
         },
         {
           "label": "Kanban drag and drop (keyboard accessible)",
-          "done": false
+          "done": true
         },
         {
           "label": "Simulated live updates from teammates",
-          "done": false
+          "done": true
         },
         {
           "label": "AI task drafting (mock)",
@@ -261,7 +265,7 @@
     {
       "date": "2026-10-24",
       "status": "shipped",
-      "summary": "v1 scope locked; visual v2 + landing page"
+      "summary": "Visual v2, landing page, Kanban board, live updates"
     },
     {
       "date": "2026-10-25",
@@ -315,6 +319,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-24",
+      "title": "Kanban board with live updates",
+      "body": "Drag and drop with optimistic moves (mouse, touch and keyboard, announced to screen readers). Live updates arrive over a WebSocket; on the mock, virtual teammates move and add tasks, with presence avatars and toasts."
+    },
     {
       "date": "2026-10-24",
       "title": "Visual v2 and landing page",

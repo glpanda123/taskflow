@@ -12,9 +12,16 @@ export type Scenario = {
   failNext: 500 | 503 | null;
   /** If true, the next task write finds the task already changed by someone else → 409. */
   conflictNext: boolean;
+  /** Virtual teammates move and add tasks over the realtime socket. */
+  teammates: boolean;
 };
 
-export const scenario: Scenario = { latencyMs: 0, failNext: null, conflictNext: false };
+export const scenario: Scenario = {
+  latencyMs: 0,
+  failNext: null,
+  conflictNext: false,
+  teammates: true,
+};
 
 type Listener = () => void;
 const listeners = new Set<Listener>();

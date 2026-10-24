@@ -2,9 +2,11 @@
 
 import { taskStatusValues, type Task, type TaskStatus } from '@taskflow/api-contract';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { LayoutGrid, List, Radio } from 'lucide-react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { Avatar, DueLabel } from '@/components/task/task-bits';
 import { Button } from '@/components/ui/button';
+import { ToastStack, type Toast } from '@/components/ui/toast-stack';
 import { conflictTask, errorMessage } from '@/lib/api/errors';
 import {
   useCreateTask,
@@ -15,11 +17,17 @@ import {
 } from '@/lib/api/queries';
 import { priorityLabel, statusLabel } from '@/lib/format';
 import { projectColor } from '@/lib/project-color';
+import { useProjectRealtime } from '@/lib/realtime/use-project-realtime';
+import { BoardView } from './board-view';
 import { TaskDetail } from './task-detail';
+
+type View = 'board' | 'list';
 
 export function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
-  const selectedId = useSearchParams().get('task');
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get('task');
+  const view: View = searchParams.get('view') === 'list' ? 'list' : 'board';
   const router = useRouter();
   const pathname = usePathname();
 
@@ -29,9 +37,62 @@ export function ProjectView() {
   const project = projects.data?.find((p) => p.id === projectId);
   const selected = tasks.data?.find((t) => t.id === selectedId);
 
-  // The open task lives in the URL, so it survives refresh-free navigation and can be linked.
-  const select = (id: string | null) =>
-    router.replace(id ? `${pathname}?task=${id}` : pathname, { scroll: false });
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [highlighted, setHighlighted] = useState<ReadonlySet<string>>(new Set());
+  const dismiss = useCallback(
+    (key: number) => setToasts((list) => list.filter((t) => t.key !== key)),
+    [],
+  );
+
+  // Teammates' changes arrive here: the cache is already updated, we only tell the user.
+  const { online } = useProjectRealtime(projectId, (event) => {
+    const first = event.actor.name.split(' ')[0];
+    setToasts((list) => [
+      ...list.slice(-2),
+      {
+        key: event.key,
+        body: (
+          <span className="flex items-start gap-2.5">
+            <Avatar name={event.actor.name} />
+            <span>
+              <span className="font-semibold">{first}</span>{' '}
+              {event.change === 'created' ? 'added' : 'moved'}{' '}
+              <span className="font-medium">{event.task.title}</span>
+              {event.change === 'moved' ? ` to ${statusLabel[event.task.status]}` : ''}
+              <span className="mt-0.5 flex items-center gap-1 text-muted-foreground">
+                <Radio aria-hidden className="size-3 text-emerald-600" /> Live
+              </span>
+            </span>
+          </span>
+        ),
+      },
+    ]);
+    setHighlighted((ids) => new Set(ids).add(event.task.id));
+    setTimeout(() => {
+      dismiss(event.key);
+      setHighlighted((ids) => {
+        const next = new Set(ids);
+        next.delete(event.task.id);
+        return next;
+      });
+    }, 5000);
+  });
+
+  // The open task and the view live in the URL, so they can be linked and survive navigation.
+  const go = (patch: { task?: string | null; view?: View }) => {
+    const params = new URLSearchParams(searchParams);
+    if (patch.task !== undefined) {
+      if (patch.task) params.set('task', patch.task);
+      else params.delete('task');
+    }
+    if (patch.view) {
+      if (patch.view === 'list') params.set('view', 'list');
+      else params.delete('view');
+    }
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+  const select = (id: string | null) => go({ task: id });
 
   if (projects.isSuccess && !project) {
     return (
@@ -44,20 +105,72 @@ export function ProjectView() {
     );
   }
 
+  const done = tasks.data?.filter((t) => t.status === 'done').length ?? 0;
+  const total = tasks.data?.length ?? 0;
+
   return (
-    <div className="grid min-h-full md:grid-cols-[minmax(0,1fr)_400px]">
+    <div className="min-h-full">
       <section className="min-w-0 space-y-5 px-4 py-6 md:px-8">
-        <header className="space-y-1">
-          <p className="text-caption text-muted-foreground">{workspace?.name} / Projects</p>
-          <h1 className="flex items-center gap-2.5 text-title font-semibold">
-            <span aria-hidden className={`size-3 rounded-[4px] ${projectColor(projectId).dot}`} />
-            {project?.name ?? ' '}
-          </h1>
-          {tasks.data && (
-            <p className="text-caption text-muted-foreground">
-              {tasks.data.filter((t) => t.status === 'done').length} of {tasks.data.length} done
-            </p>
-          )}
+        <header className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0 space-y-1">
+            <p className="text-caption text-muted-foreground">{workspace?.name} / Projects</p>
+            <h1 className="flex items-center gap-2.5 text-title font-semibold">
+              <span aria-hidden className={`size-3 rounded-[4px] ${projectColor(projectId).dot}`} />
+              {project?.name ?? ' '}
+            </h1>
+            {tasks.data && (
+              <div className="flex items-center gap-3 text-caption text-muted-foreground">
+                <span aria-hidden className="h-1.5 w-28 overflow-hidden rounded-pill bg-border">
+                  <span
+                    className="block h-full rounded-pill bg-status-done transition-[width] duration-500"
+                    style={{ width: `${total ? (done / total) * 100 : 0}%` }}
+                  />
+                </span>
+                {done} of {total} done
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            {online.length > 0 && (
+              <div className="flex items-center gap-2" aria-label="Also here">
+                <div className="flex -space-x-1.5">
+                  {online.map((u) => (
+                    <span key={u.id} className="relative rounded-pill ring-2 ring-background">
+                      <Avatar name={u.name} size="md" />
+                      <span className="absolute -right-0.5 -bottom-0.5 size-2.5 rounded-pill bg-emerald-500 ring-2 ring-background" />
+                    </span>
+                  ))}
+                </div>
+                <span className="text-caption text-muted-foreground">
+                  {online.map((u) => u.name.split(' ')[0]).join(', ')} online
+                </span>
+              </div>
+            )}
+            <div
+              role="group"
+              aria-label="View"
+              className="inline-flex rounded-control bg-muted p-0.5 ring-1 ring-border"
+            >
+              {(
+                [
+                  ['board', 'Board', LayoutGrid],
+                  ['list', 'List', List],
+                ] as const
+              ).map(([value, label, Icon]) => (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={view === value}
+                  onClick={() => go({ view: value })}
+                  className={`inline-flex min-h-9 items-center gap-1.5 rounded-[5px] px-3 text-caption font-medium ${view === value ? 'bg-card shadow-xs ring-1 ring-border' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  <Icon aria-hidden className="size-4" />
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </header>
 
         {!canEditTasks && (
@@ -85,6 +198,15 @@ export function ProjectView() {
               {canEditTasks ? 'Add your first task above.' : 'Check back later.'}
             </p>
           </div>
+        ) : view === 'board' ? (
+          <BoardView
+            projectId={projectId}
+            tasks={tasks.data}
+            canEdit={canEditTasks}
+            selectedId={selectedId}
+            highlighted={highlighted}
+            onSelect={select}
+          />
         ) : (
           <TaskGroups
             projectId={projectId}
@@ -97,18 +219,27 @@ export function ProjectView() {
       </section>
 
       {selected && (
-        <aside
-          aria-label="Task details"
-          className="fixed inset-0 z-40 overflow-y-auto bg-card md:sticky md:top-0 md:z-auto md:h-dvh md:border-l md:border-border"
-        >
-          <TaskDetail
-            key={selected.id}
-            task={selected}
-            canEdit={canEditTasks}
-            onClose={() => select(null)}
+        <>
+          <div
+            aria-hidden
+            onClick={() => select(null)}
+            className="fixed inset-0 z-30 hidden bg-foreground/10 md:block"
           />
-        </aside>
+          <aside
+            aria-label="Task details"
+            className="fixed inset-0 z-40 animate-slide-in overflow-y-auto bg-card md:inset-y-0 md:right-0 md:left-auto md:w-[420px] md:border-l md:border-border md:shadow-2xl"
+          >
+            <TaskDetail
+              key={selected.id}
+              task={selected}
+              canEdit={canEditTasks}
+              onClose={() => select(null)}
+            />
+          </aside>
+        </>
       )}
+
+      <ToastStack toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

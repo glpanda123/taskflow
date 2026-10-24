@@ -16,6 +16,7 @@ import {
   type ClientMessage,
   type ServerMessage,
 } from '@/lib/realtime/protocol';
+import { recordActivity } from '../activity';
 import { db, mockId, now } from '../db';
 import { canSeeProject } from '../http';
 import { scenario } from '../scenario';
@@ -73,6 +74,7 @@ function teammateAction(projectId: string, actor: Actor): ServerMessage | null {
       updatedAt: now(),
     };
     db.tasks.push(task);
+    recordActivity('task.created', actor.id, task);
     return { type: 'task.changed', projectId, change: 'created', task, actor };
   }
 
@@ -85,6 +87,7 @@ function teammateAction(projectId: string, actor: Actor): ServerMessage | null {
   task.position = generateKeyBetween(bottom?.position ?? null, null);
   task.version += 1;
   task.updatedAt = now();
+  recordActivity('task.moved', actor.id, task, [{ field: 'status', from, to }]);
   return { type: 'task.changed', projectId, change: 'moved', task: { ...task }, actor, from };
 }
 

@@ -205,7 +205,10 @@ function TaskRow({
 }) {
   const color = projectColor(task.projectId);
   return (
-    <li style={{ animationDelay: `${200 + index * 40}ms` }} className="animate-fade-up">
+    <li
+      style={{ animationDelay: `${200 + Math.min(index, 10) * 40}ms` }}
+      className="animate-fade-up"
+    >
       <Link
         href={`/projects/${task.projectId}?task=${task.id}`}
         className="group flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3 transition-colors hover:bg-muted md:px-5"

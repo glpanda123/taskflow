@@ -5,7 +5,15 @@
  * resets it to this seed. Shapes match the API contract exactly (types are generated
  * from openapi.yaml), so the UI can't tell it apart from the real backend.
  */
-import type { Invitation, Project, Role, Task, User, Workspace } from '@taskflow/api-contract';
+import type {
+  ActivityEvent,
+  Invitation,
+  Project,
+  Role,
+  Task,
+  User,
+  Workspace,
+} from '@taskflow/api-contract';
 import { generateNKeysBetween } from 'fractional-indexing';
 
 export const DEMO_PASSWORD = 'password123';
@@ -30,6 +38,7 @@ export type Db = {
   projects: Project[];
   tasks: Task[];
   invitations: (Invitation & { workspaceId: string })[];
+  activity: ActivityEvent[];
   sessions: Map<string, string>; // access token → userId
 };
 
@@ -126,6 +135,72 @@ function seed(): Db {
     });
   }
 
+  // A little history so the activity log isn't empty on first open.
+  const hoursAgo = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
+  const byTitle = (title: string) => tasks.find((t) => t.title === title)!;
+  const activity: ActivityEvent[] = [];
+  const log = (
+    type: ActivityEvent['type'],
+    actor: Assignee,
+    title: string,
+    changes: ActivityEvent['changes'],
+    at: string,
+  ) => {
+    const task = byTitle(title);
+    activity.push({
+      id: id(20_000 + activity.length),
+      projectId: task.projectId,
+      type,
+      actor,
+      task: { id: task.id, title: task.title },
+      changes,
+      createdAt: at,
+    });
+  };
+  for (const t of tasks) log('task.created', ly!, t.title, [], created);
+  log(
+    'task.moved',
+    ly!,
+    'Kick-off meeting notes',
+    [{ field: 'status', from: 'in_progress', to: 'done' }],
+    hoursAgo(120),
+  );
+  log(
+    'task.moved',
+    minh!,
+    'Moodboard',
+    [{ field: 'status', from: 'in_review', to: 'done' }],
+    hoursAgo(50),
+  );
+  log(
+    'task.updated',
+    ly!,
+    'Write homepage copy',
+    [{ field: 'assignee', from: null, to: 'An Pham' }],
+    hoursAgo(30),
+  );
+  log(
+    'task.moved',
+    ly!,
+    'Review hero illustrations',
+    [{ field: 'status', from: 'in_progress', to: 'in_review' }],
+    hoursAgo(20),
+  );
+  log(
+    'task.updated',
+    an!,
+    'Fix contact form validation',
+    [{ field: 'priority', from: 'medium', to: 'high' }],
+    hoursAgo(6),
+  );
+  log(
+    'task.moved',
+    minh!,
+    'Design pricing page',
+    [{ field: 'status', from: 'todo', to: 'in_progress' }],
+    hoursAgo(2),
+  );
+
   return {
     users,
     workspaces: [workspace],
@@ -143,6 +218,7 @@ function seed(): Db {
     projects: [website, mobile],
     tasks,
     invitations: [],
+    activity,
     sessions: new Map(),
   };
 }

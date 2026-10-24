@@ -9,6 +9,7 @@ import type {
   CreateProjectRequest,
   CreateTaskRequest,
   CreateWorkspaceRequest,
+  DraftTasksRequest,
   InviteMemberRequest,
   MoveTaskRequest,
   Task,
@@ -28,6 +29,7 @@ export const qk = {
   tasks: (projectId: string, status?: TaskStatus[]) =>
     ['projects', projectId, 'tasks', { status: status ?? 'all' }] as const,
   allTasksOf: (projectId: string) => ['projects', projectId, 'tasks'] as const,
+  activity: (projectId: string) => ['projects', projectId, 'activity'] as const,
 };
 
 // ── Reads ──────────────────────────────────────────────────────────────────
@@ -113,11 +115,26 @@ export function useTasks(projectId: string | undefined, status?: TaskStatus[]) {
   });
 }
 
+/** Newest first; first page is enough for the prototype. */
+export function useActivity(projectId: string) {
+  return useQuery({
+    queryKey: qk.activity(projectId),
+    queryFn: () =>
+      unwrap(
+        api.GET('/projects/{projectId}/activity', {
+          params: { path: { projectId }, query: { limit: 100 } },
+        }),
+      ),
+    select: (page) => page.items,
+  });
+}
+
 // ── Writes ─────────────────────────────────────────────────────────────────
 
 /** A task write changes the project's lists and the Today overview counts. */
 function invalidateTaskViews(qc: QueryClient, projectId: string) {
   void qc.invalidateQueries({ queryKey: qk.allTasksOf(projectId) });
+  void qc.invalidateQueries({ queryKey: qk.activity(projectId) });
   void qc.invalidateQueries({
     predicate: (q) => q.queryKey[0] === 'workspaces' && q.queryKey[2] === 'today',
   });
@@ -145,6 +162,7 @@ export function putTaskInCache(qc: QueryClient, task: Task) {
       : [...page.items, task];
     return { ...page, items: items.sort(byBoardOrder) };
   });
+  void qc.invalidateQueries({ queryKey: qk.activity(task.projectId) });
   void qc.invalidateQueries({
     predicate: (q) => q.queryKey[0] === 'workspaces' && q.queryKey[2] === 'today',
   });
@@ -201,6 +219,16 @@ export function useMoveTask(projectId: string) {
     // The response has the new version: cache it at once so a quick second drag isn't a 409.
     onSuccess: (task) => putTaskInCache(qc, task),
     onSettled: () => invalidateTaskViews(qc, projectId),
+  });
+}
+
+/** AI drafts for a brief. Nothing is saved; the caller creates the tasks the user keeps. */
+export function useDraftTasks(projectId: string) {
+  return useMutation({
+    mutationFn: (body: DraftTasksRequest) =>
+      unwrap(
+        api.POST('/projects/{projectId}/task-drafts', { params: { path: { projectId } }, body }),
+      ),
   });
 }
 

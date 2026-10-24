@@ -23,7 +23,7 @@
       },
       {
         "label": "AI task drafting + activity log",
-        "done": false
+        "done": true
       },
       {
         "label": "Stage 1 gate: 60-second pitch in English",
@@ -113,11 +113,11 @@
         },
         {
           "label": "AI task drafting (mock)",
-          "done": false
+          "done": true
         },
         {
           "label": "Activity log per project",
-          "done": false
+          "done": true
         },
         {
           "label": "Demo data, pitch deck, 2-minute demo video",
@@ -265,7 +265,7 @@
     {
       "date": "2026-10-24",
       "status": "shipped",
-      "summary": "Visual v2, landing page, Kanban board, live updates"
+      "summary": "Visual v2, landing page, Kanban board, live updates, AI drafting, activity log"
     },
     {
       "date": "2026-10-25",
@@ -319,6 +319,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-24",
+      "title": "AI task drafting and activity log",
+      "body": "Paste a client brief and get editable task drafts to review before anything is saved (rule-based stand-in for the model on the mock). Every create, edit and move now lands in a per-project activity log. Both endpoints added to the OpenAPI contract as drafts for the Stage 3 review."
+    },
     {
       "date": "2026-10-24",
       "title": "Kanban board with live updates",

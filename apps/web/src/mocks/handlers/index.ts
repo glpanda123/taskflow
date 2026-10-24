@@ -3,6 +3,7 @@ import { http, problem } from '../http';
 import { consume, scenario } from '../scenario';
 import { authHandlers } from './auth';
 import { memberHandlers } from './members';
+import { projectExtraHandlers } from './project-extras';
 import { realtimeHandler } from './realtime';
 import { taskHandlers } from './tasks';
 import { workspaceHandlers } from './workspaces';
@@ -29,5 +30,6 @@ export const handlers = [
   ...workspaceHandlers,
   ...taskHandlers,
   ...memberHandlers,
+  ...projectExtraHandlers,
   realtimeHandler,
 ];

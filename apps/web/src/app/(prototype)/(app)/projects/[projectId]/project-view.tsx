@@ -2,8 +2,8 @@
 
 import { taskStatusValues, type Task, type TaskStatus } from '@taskflow/api-contract';
 import { useParams, usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { LayoutGrid, List, Radio } from 'lucide-react';
-import { useCallback, useState, type FormEvent } from 'react';
+import { History, LayoutGrid, List, Radio, Sparkles } from 'lucide-react';
+import { useCallback, useState, type FormEvent, type ReactNode } from 'react';
 import { Avatar, DueLabel } from '@/components/task/task-bits';
 import { Button } from '@/components/ui/button';
 import { ToastStack, type Toast } from '@/components/ui/toast-stack';
@@ -18,16 +18,22 @@ import {
 import { priorityLabel, statusLabel } from '@/lib/format';
 import { projectColor } from '@/lib/project-color';
 import { useProjectRealtime } from '@/lib/realtime/use-project-realtime';
+import { ActivityView } from './activity-view';
+import { AiDraftButton } from './ai-draft-dialog';
 import { BoardView } from './board-view';
 import { TaskDetail } from './task-detail';
 
-type View = 'board' | 'list';
+type View = 'board' | 'list' | 'activity';
+
+const views = ['board', 'list', 'activity'] as const;
+let toastKey = 0;
 
 export function ProjectView() {
   const { projectId } = useParams<{ projectId: string }>();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get('task');
-  const view: View = searchParams.get('view') === 'list' ? 'list' : 'board';
+  const requested = searchParams.get('view');
+  const view: View = views.find((v) => v === requested) ?? 'board';
   const router = useRouter();
   const pathname = usePathname();
 
@@ -44,38 +50,40 @@ export function ProjectView() {
     [],
   );
 
+  /** Show a notice for 5 s; `taskId` also highlights that card on the board. */
+  const pushToast = (body: ReactNode, taskId?: string) => {
+    const key = ++toastKey;
+    setToasts((list) => [...list.slice(-2), { key, body }]);
+    if (taskId) setHighlighted((ids) => new Set(ids).add(taskId));
+    setTimeout(() => {
+      dismiss(key);
+      if (taskId)
+        setHighlighted((ids) => {
+          const next = new Set(ids);
+          next.delete(taskId);
+          return next;
+        });
+    }, 5000);
+  };
+
   // Teammates' changes arrive here: the cache is already updated, we only tell the user.
   const { online } = useProjectRealtime(projectId, (event) => {
     const first = event.actor.name.split(' ')[0];
-    setToasts((list) => [
-      ...list.slice(-2),
-      {
-        key: event.key,
-        body: (
-          <span className="flex items-start gap-2.5">
-            <Avatar name={event.actor.name} />
-            <span>
-              <span className="font-semibold">{first}</span>{' '}
-              {event.change === 'created' ? 'added' : 'moved'}{' '}
-              <span className="font-medium">{event.task.title}</span>
-              {event.change === 'moved' ? ` to ${statusLabel[event.task.status]}` : ''}
-              <span className="mt-0.5 flex items-center gap-1 text-muted-foreground">
-                <Radio aria-hidden className="size-3 text-emerald-600" /> Live
-              </span>
-            </span>
+    pushToast(
+      <span className="flex items-start gap-2.5">
+        <Avatar name={event.actor.name} />
+        <span>
+          <span className="font-semibold">{first}</span>{' '}
+          {event.change === 'created' ? 'added' : 'moved'}{' '}
+          <span className="font-medium">{event.task.title}</span>
+          {event.change === 'moved' ? ` to ${statusLabel[event.task.status]}` : ''}
+          <span className="mt-0.5 flex items-center gap-1 text-muted-foreground">
+            <Radio aria-hidden className="size-3 text-emerald-600" /> Live
           </span>
-        ),
-      },
-    ]);
-    setHighlighted((ids) => new Set(ids).add(event.task.id));
-    setTimeout(() => {
-      dismiss(event.key);
-      setHighlighted((ids) => {
-        const next = new Set(ids);
-        next.delete(event.task.id);
-        return next;
-      });
-    }, 5000);
+        </span>
+      </span>,
+      event.task.id,
+    );
   });
 
   // The open task and the view live in the URL, so they can be linked and survive navigation.
@@ -86,8 +94,8 @@ export function ProjectView() {
       else params.delete('task');
     }
     if (patch.view) {
-      if (patch.view === 'list') params.set('view', 'list');
-      else params.delete('view');
+      if (patch.view === 'board') params.delete('view');
+      else params.set('view', patch.view);
     }
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
@@ -156,6 +164,7 @@ export function ProjectView() {
                 [
                   ['board', 'Board', LayoutGrid],
                   ['list', 'List', List],
+                  ['activity', 'Activity', History],
                 ] as const
               ).map(([value, label, Icon]) => (
                 <button
@@ -179,9 +188,26 @@ export function ProjectView() {
           </p>
         )}
 
-        {canEditTasks && <NewTaskForm projectId={projectId} />}
+        {canEditTasks && view !== 'activity' && (
+          <div className="flex flex-wrap gap-2">
+            <NewTaskForm projectId={projectId} />
+            <AiDraftButton
+              projectId={projectId}
+              onAdded={(n) =>
+                pushToast(
+                  <span className="flex items-center gap-2">
+                    <Sparkles aria-hidden className="size-4 text-violet-600" />
+                    Added {n} {n === 1 ? 'task' : 'tasks'} to To do
+                  </span>,
+                )
+              }
+            />
+          </div>
+        )}
 
-        {tasks.isPending ? (
+        {view === 'activity' ? (
+          <ActivityView projectId={projectId} onOpenTask={select} />
+        ) : tasks.isPending ? (
           <ListSkeleton />
         ) : tasks.isError ? (
           <div role="alert" className="space-y-3 rounded-card border border-border bg-card p-6">
@@ -368,7 +394,7 @@ function NewTaskForm({ projectId }: { projectId: string }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex gap-2">
+    <form onSubmit={onSubmit} className="flex min-w-64 flex-1 gap-2">
       <label htmlFor="new-task" className="sr-only">
         New task title
       </label>

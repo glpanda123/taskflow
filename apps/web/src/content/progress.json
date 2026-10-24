@@ -4,21 +4,25 @@
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
-  "currentStageId": "problem",
+  "currentStageId": "prototype",
   "today": {
     "date": "2026-10-24",
-    "focus": "Close Stage 1, then the Stage 2 prototype",
+    "focus": "Stage 2 — a prototype worth presenting",
     "items": [
       {
         "label": "Lock v1 scope and the v1.1 roadmap",
         "done": true
       },
       {
-        "label": "Gate: 60-second pitch in English",
-        "done": false
+        "label": "Visual v2: sidebar, Today, sign-in",
+        "done": true
       },
       {
-        "label": "Stage 2: visual v2 + landing page",
+        "label": "Landing page with one-click demo",
+        "done": true
+      },
+      {
+        "label": "Stage 1 gate: 60-second pitch in English",
         "done": false
       }
     ]
@@ -93,7 +97,7 @@
       "items": [
         {
           "label": "Visual v2 + landing page",
-          "done": false
+          "done": true
         },
         {
           "label": "Kanban drag and drop (keyboard accessible)",
@@ -256,8 +260,8 @@
     },
     {
       "date": "2026-10-24",
-      "status": "in_progress",
-      "summary": "v1 scope locked; Stage 2 starts"
+      "status": "shipped",
+      "summary": "v1 scope locked; visual v2 + landing page"
     },
     {
       "date": "2026-10-25",
@@ -311,6 +315,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-24",
+      "title": "Visual v2 and landing page",
+      "body": "New landing page (problem, features, how it works, planned pricing) with a one-click demo. Redesigned sidebar with project colours, a richer Today screen and a new sign-in page."
+    },
     {
       "date": "2026-10-24",
       "title": "v1 scope locked",

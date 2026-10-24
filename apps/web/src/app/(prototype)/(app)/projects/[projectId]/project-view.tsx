@@ -14,6 +14,7 @@ import {
   useTasks,
 } from '@/lib/api/queries';
 import { priorityLabel, statusLabel } from '@/lib/format';
+import { projectColor } from '@/lib/project-color';
 import { TaskDetail } from './task-detail';
 
 export function ProjectView() {
@@ -48,7 +49,10 @@ export function ProjectView() {
       <section className="min-w-0 space-y-5 px-4 py-6 md:px-8">
         <header className="space-y-1">
           <p className="text-caption text-muted-foreground">{workspace?.name} / Projects</p>
-          <h1 className="text-title font-semibold">{project?.name ?? ' '}</h1>
+          <h1 className="flex items-center gap-2.5 text-title font-semibold">
+            <span aria-hidden className={`size-3 rounded-[4px] ${projectColor(projectId).dot}`} />
+            {project?.name ?? ' '}
+          </h1>
           {tasks.data && (
             <p className="text-caption text-muted-foreground">
               {tasks.data.filter((t) => t.status === 'done').length} of {tasks.data.length} done

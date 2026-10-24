@@ -1,28 +1,24 @@
 {
-  "updatedAt": "2026-10-22",
+  "updatedAt": "2026-10-24",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
   "currentStageId": "problem",
   "today": {
-    "date": "2026-10-22",
-    "focus": "Stage 1 — why TaskFlow is worth building",
+    "date": "2026-10-24",
+    "focus": "Close Stage 1, then the Stage 2 prototype",
     "items": [
       {
-        "label": "Business brief: problem, customers, competitors, model, metrics, risks",
-        "done": true
-      },
-      {
-        "label": "Public /status page (this page)",
-        "done": true
-      },
-      {
         "label": "Lock v1 scope and the v1.1 roadmap",
-        "done": false
+        "done": true
       },
       {
         "label": "Gate: 60-second pitch in English",
+        "done": false
+      },
+      {
+        "label": "Stage 2: visual v2 + landing page",
         "done": false
       }
     ]
@@ -79,7 +75,7 @@
         },
         {
           "label": "v1 scope + v1.1 roadmap locked",
-          "done": false
+          "done": true
         },
         {
           "label": "Pitch passes the gate",
@@ -109,6 +105,10 @@
         },
         {
           "label": "AI task drafting (mock)",
+          "done": false
+        },
+        {
+          "label": "Activity log per project",
           "done": false
         },
         {
@@ -246,18 +246,18 @@
     },
     {
       "date": "2026-10-22",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "Stage 1: business brief, status page"
     },
     {
       "date": "2026-10-23",
-      "status": "planned",
-      "summary": "Visual v2 + landing page"
+      "status": "rest",
+      "summary": "Rest day"
     },
     {
       "date": "2026-10-24",
-      "status": "planned",
-      "summary": "Kanban drag and drop, live updates, AI drafting (mock)"
+      "status": "in_progress",
+      "summary": "v1 scope locked; Stage 2 starts"
     },
     {
       "date": "2026-10-25",
@@ -311,6 +311,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-24",
+      "title": "v1 scope locked",
+      "body": "v1: accounts, workspaces and roles, per-project client viewers, live board with drag and drop, Today, activity log, AI task drafting. Comments, labels, attachments and search move to the v1.1 roadmap."
+    },
     {
       "date": "2026-10-22",
       "title": "New process: stages with gates",

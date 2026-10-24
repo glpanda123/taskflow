@@ -865,7 +865,11 @@ components:
         field:
           type: string
           enum: [title, description, status, priority, assignee, dueDate]
-        from: { type: [string, 'null'], description: 'Display value before (status key, user name, date…)' }
+        from:
+          {
+            type: [string, 'null'],
+            description: 'Display value before (status key, user name, date…)',
+          }
         to: { type: [string, 'null'] }
     ActivityPage:
       type: object

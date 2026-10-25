@@ -3,6 +3,7 @@ import {
   CalendarClock,
   Camera,
   Check,
+  CirclePlay,
   Eye,
   MessageCircleQuestion,
   Radio,
@@ -158,10 +159,11 @@ export default function LandingPage() {
                   />
                 </Link>
                 <a
-                  href="#how"
-                  className="inline-flex min-h-touch items-center rounded-control border border-input bg-card px-5 font-medium hover:bg-muted"
+                  href="#video"
+                  className="inline-flex min-h-touch items-center gap-2 rounded-control border border-input bg-card px-5 font-medium hover:bg-muted"
                 >
-                  How it works
+                  <CirclePlay aria-hidden className="size-4 text-primary" />
+                  Watch the demo · 1:40
                 </a>
               </div>
               <p className="text-caption text-muted-foreground">
@@ -171,6 +173,41 @@ export default function LandingPage() {
             <div className="mx-auto mt-14 max-w-5xl animate-fade-up px-2 [animation-delay:150ms] md:px-6">
               <BoardPreview />
             </div>
+          </div>
+        </section>
+
+        {/* Demo video */}
+        <section
+          id="video"
+          aria-labelledby="video-heading"
+          className="scroll-mt-20 border-t border-border bg-foreground"
+        >
+          <div className="mx-auto max-w-5xl space-y-6 px-4 py-16 md:px-8">
+            <div className="space-y-2 text-center text-white">
+              <h2 id="video-heading" className="text-title font-semibold md:text-[34px]">
+                The demo in 100 seconds
+              </h2>
+              <p className="text-white/70">
+                Today, the board, a teammate moving work live, AI drafting from a brief, the
+                activity log and the client&apos;s read-only view.
+              </p>
+            </div>
+            <video
+              controls
+              muted
+              playsInline
+              preload="none"
+              poster="/demo/taskflow-demo-poster.jpg"
+              className="aspect-video w-full rounded-card bg-black shadow-2xl ring-1 ring-white/10"
+            >
+              <source src="/demo/taskflow-demo.webm" type="video/webm" />
+              <source src="/demo/taskflow-demo.mp4" type="video/mp4" />
+              Your browser can&apos;t play this video.{' '}
+              <a href="/demo/taskflow-demo.mp4">Download it</a> instead.
+            </video>
+            <p className="text-center text-caption text-white/50">
+              Silent, with captions. Recorded from the live prototype.
+            </p>
           </div>
         </section>
 

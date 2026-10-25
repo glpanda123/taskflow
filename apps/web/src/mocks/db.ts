@@ -68,7 +68,7 @@ function seed(): Db {
     },
     {
       id: id(4),
-      name: 'Client Viewer',
+      name: 'Hana Le',
       email: 'viewer@client.dev',
       avatarUrl: null,
       password: DEMO_PASSWORD,
@@ -90,49 +90,118 @@ function seed(): Db {
     name: 'Mobile app',
     createdAt: created,
   };
+  const brand: Project = {
+    id: id(202),
+    workspaceId: workspace.id,
+    name: 'Brand guidelines',
+    createdAt: created,
+  };
 
-  // [title, status, priority, assignee, due in N days (null = no date), labels]
-  const rows: [
+  // Demo data: three client projects at different stages, so Today has something to say.
+  // [title, status, priority, assignee, due in N days (null = no date), labels, description]
+  type Row = [
     string,
     Task['status'],
     Task['priority'],
     Assignee | null,
     number | null,
     string[],
-  ][] = [
-    ['Write homepage copy', 'todo', 'high', an!, -2, ['content']],
-    ['Collect client logos', 'todo', 'low', null, 5, []],
-    ['Set up analytics', 'todo', 'medium', null, null, ['tech']],
-    ['Design pricing page', 'in_progress', 'high', minh!, 1, ['design']],
-    ['Build navigation component', 'in_progress', 'medium', ly!, 3, ['frontend']],
-    ['Fix contact form validation', 'in_progress', 'high', an!, -1, ['bug']],
-    ['Review hero illustrations', 'in_review', 'medium', ly!, 2, ['design']],
-    ['SEO meta tags', 'in_review', 'low', minh!, 6, ['tech']],
-    ['Kick-off meeting notes', 'done', 'low', ly!, -5, []],
-    ['Moodboard', 'done', 'medium', minh!, -3, ['design']],
+    string?,
+  ];
+  const seedRows: [Project, Row[]][] = [
+    [
+      website,
+      [
+        [
+          'Write homepage copy',
+          'todo',
+          'high',
+          an!,
+          -2,
+          ['content'],
+          'Hero headline, three benefit blocks and the signup CTA. Client wants a friendly, short tone.',
+        ],
+        ['Collect client logos', 'todo', 'low', null, 5, []],
+        ['Set up analytics', 'todo', 'medium', null, null, ['tech']],
+        [
+          'Design pricing page',
+          'in_progress',
+          'high',
+          minh!,
+          1,
+          ['design'],
+          'Two plans plus an FAQ. Reuse the card style from the homepage.',
+        ],
+        ['Build navigation component', 'in_progress', 'medium', ly!, 3, ['frontend']],
+        [
+          'Fix contact form validation',
+          'in_progress',
+          'high',
+          an!,
+          -1,
+          ['bug'],
+          'Phone numbers with spaces are rejected. Client reported it twice.',
+        ],
+        ['Review hero illustrations', 'in_review', 'medium', ly!, 2, ['design']],
+        ['SEO meta tags', 'in_review', 'low', minh!, 6, ['tech']],
+        ['Kick-off meeting notes', 'done', 'low', ly!, -5, []],
+        ['Moodboard', 'done', 'medium', minh!, -3, ['design']],
+      ],
+    ],
+    [
+      mobile,
+      [
+        ['App store screenshots', 'todo', 'medium', minh!, 4, ['design']],
+        ['Push notification copy', 'todo', 'low', an!, 8, ['content']],
+        [
+          'Login with phone number',
+          'in_progress',
+          'high',
+          ly!,
+          -1,
+          ['frontend'],
+          'OTP via SMS. Blocked until the client confirms the SMS provider.',
+        ],
+        ['Offline mode for order list', 'in_progress', 'medium', an!, 6, ['frontend']],
+        ['Beta build for client QA', 'in_review', 'high', ly!, 2, ['release']],
+        ['Wireframes v2', 'done', 'medium', minh!, -9, ['design']],
+        ['Tech stack decision', 'done', 'low', ly!, -12, []],
+      ],
+    ],
+    [
+      brand,
+      [
+        ['Colour palette options', 'in_review', 'medium', minh!, 1, ['design']],
+        ['Typography pairing', 'in_progress', 'low', minh!, 5, ['design']],
+        ['Logo usage page', 'todo', 'medium', null, 9, ['design']],
+        ['Client feedback round 1', 'done', 'medium', ly!, -4, []],
+      ],
+    ],
   ];
 
   const tasks: Task[] = [];
-  for (const status of ['todo', 'in_progress', 'in_review', 'done'] as const) {
-    const inColumn = rows.filter((r) => r[1] === status);
-    const keys = generateNKeysBetween(null, null, inColumn.length);
-    inColumn.forEach(([title, , priority, assignee, due, labels], i) => {
-      tasks.push({
-        id: id(300 + tasks.length),
-        projectId: website.id,
-        title,
-        description: null,
-        status,
-        priority,
-        assignee,
-        dueDate: due === null ? null : dayOffset(due),
-        labels,
-        position: keys[i]!,
-        version: 1,
-        createdAt: created,
-        updatedAt: created,
+  for (const [project, rows] of seedRows) {
+    for (const status of ['todo', 'in_progress', 'in_review', 'done'] as const) {
+      const inColumn = rows.filter((r) => r[1] === status);
+      const keys = generateNKeysBetween(null, null, inColumn.length);
+      inColumn.forEach(([title, , priority, assignee, due, labels, description], i) => {
+        tasks.push({
+          id: id(300 + tasks.length),
+          projectId: project.id,
+          title,
+          description: description ?? null,
+          status,
+          priority,
+          assignee,
+          dueDate: due === null ? null : dayOffset(due),
+          labels,
+          position: keys[i]!,
+          version: 1,
+          createdAt: created,
+          updatedAt: created,
+        });
       });
-    });
+    }
   }
 
   // A little history so the activity log isn't empty on first open.
@@ -215,7 +284,7 @@ function seed(): Db {
         ],
       ],
     ]),
-    projects: [website, mobile],
+    projects: [website, mobile, brand],
     tasks,
     invitations: [],
     activity,

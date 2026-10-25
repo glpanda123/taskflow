@@ -1,32 +1,28 @@
 {
-  "updatedAt": "2026-10-24",
+  "updatedAt": "2026-10-25",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
   "currentStageId": "prototype",
   "today": {
-    "date": "2026-10-24",
-    "focus": "Stage 2 — a prototype worth presenting",
+    "date": "2026-10-25",
+    "focus": "Stage 2 — present the prototype",
     "items": [
       {
-        "label": "Visual v2 + landing page with one-click demo",
+        "label": "Demo data across three client projects",
         "done": true
       },
       {
-        "label": "Kanban board: drag and drop, keyboard and screen reader support",
+        "label": "100-second demo video on the landing page",
         "done": true
       },
       {
-        "label": "Live updates over WebSocket (virtual teammates on the mock)",
+        "label": "8-slide pitch deck with speaker notes",
         "done": true
       },
       {
-        "label": "AI task drafting + activity log",
-        "done": true
-      },
-      {
-        "label": "Stage 1 gate: 60-second pitch in English",
+        "label": "5-minute talk rehearsed, feedback collected",
         "done": false
       }
     ]
@@ -121,6 +117,10 @@
         },
         {
           "label": "Demo data, pitch deck, 2-minute demo video",
+          "done": true
+        },
+        {
+          "label": "Feedback from a mentor and 2–3 team leads; UI frozen",
           "done": false
         }
       ]
@@ -269,8 +269,8 @@
     },
     {
       "date": "2026-10-25",
-      "status": "planned",
-      "summary": "Demo data, pitch deck, demo video"
+      "status": "in_progress",
+      "summary": "Demo data, demo video, pitch deck"
     },
     {
       "date": "2026-10-26",
@@ -319,6 +319,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-25",
+      "title": "Ready to present",
+      "body": "Richer demo data across three client projects, a 100-second captioned demo video on the landing page, and an 8-slide pitch deck. Next: feedback from a mentor and team leads, then the UI is frozen."
+    },
     {
       "date": "2026-10-24",
       "title": "AI task drafting and activity log",

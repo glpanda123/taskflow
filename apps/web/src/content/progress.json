@@ -1,28 +1,24 @@
 {
-  "updatedAt": "2026-10-25",
+  "updatedAt": "2026-10-26",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
-  "currentStageId": "prototype",
+  "currentStageId": "design",
   "today": {
-    "date": "2026-10-25",
-    "focus": "Stage 2 — present the prototype",
+    "date": "2026-10-26",
+    "focus": "Stage 3 — how we build it",
     "items": [
       {
-        "label": "Demo data across three client projects",
+        "label": "C4 context and container diagrams for all of v1",
         "done": true
       },
       {
-        "label": "100-second demo video on the landing page",
+        "label": "ERD with indexes and the rules the schema enforces",
         "done": true
       },
       {
-        "label": "8-slide pitch deck with speaker notes",
-        "done": true
-      },
-      {
-        "label": "5-minute talk rehearsed, feedback collected",
+        "label": "Prototype feedback from mentor and team leads",
         "done": false
       }
     ]
@@ -135,7 +131,7 @@
       "items": [
         {
           "label": "C4 diagrams (context, containers) + ERD",
-          "done": false
+          "done": true
         },
         {
           "label": "Sequence diagrams: realtime across instances, AI drafting",
@@ -269,12 +265,12 @@
     },
     {
       "date": "2026-10-25",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "Demo data, demo video, pitch deck"
     },
     {
       "date": "2026-10-26",
-      "status": "planned",
+      "status": "in_progress",
       "summary": "C4 diagrams + ERD"
     },
     {
@@ -319,6 +315,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-26",
+      "title": "System design: containers and data model",
+      "body": "C4 context and container diagrams and the ERD for all of v1: modular monolith (API + worker), WebSocket fan-out over Redis pub/sub, a transactional outbox for reliable events, and a schema built around tenant isolation and optimistic locking. In docs/architecture."
+    },
     {
       "date": "2026-10-25",
       "title": "Ready to present",
@@ -378,6 +379,10 @@
     {
       "label": "API contract",
       "href": "/api-docs"
+    },
+    {
+      "label": "Architecture",
+      "href": "https://github.com/glpanda123/taskflow/tree/master/docs/architecture"
     },
     {
       "label": "Source on GitHub",

@@ -6,8 +6,9 @@ System design for TaskFlow v1, done before the backend is written (Stage 3: Oct 
 | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | [01 — Context and containers (C4 levels 1–2)](01-context-and-containers.md) | Who uses it, what it depends on, which deployable pieces exist and how they talk |
 | [02 — Data model (ERD)](02-data-model.md)                                   | Tables, keys, indexes, and the rules the schema enforces                         |
-| 03 — Sequences _(Oct 27)_                                                   | Drag and drop across instances, AI drafting, token refresh                       |
-| ADR-001, ADR-002 _(Oct 28)_                                                 | Backend stack; infrastructure                                                    |
+| [03 — Sequences](03-sequences.md)                                           | Drag and drop across instances, AI drafting, token refresh; realtime messages    |
+| [ADR-001 — Backend stack](adr/ADR-001-backend-stack.md)                     | NestJS, Prisma, contract validation, tests on real Postgres                      |
+| [ADR-002 — Infrastructure](adr/ADR-002-infrastructure.md)                   | Vercel + AWS (ECS Fargate, RDS, ElastiCache, SES); demo vs production profiles   |
 
 ## Requirements in one screen
 

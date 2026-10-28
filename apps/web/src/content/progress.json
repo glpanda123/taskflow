@@ -1,24 +1,28 @@
 {
-  "updatedAt": "2026-10-26",
+  "updatedAt": "2026-10-28",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
   "currentStageId": "design",
   "today": {
-    "date": "2026-10-26",
-    "focus": "Stage 3 — how we build it",
+    "date": "2026-10-28",
+    "focus": "Stage 3 — finish the design",
     "items": [
       {
-        "label": "C4 context and container diagrams for all of v1",
+        "label": "Sequence diagrams: live move across instances, AI drafting, token refresh",
         "done": true
       },
       {
-        "label": "ERD with indexes and the rules the schema enforces",
+        "label": "ADR-001 backend stack, ADR-002 infrastructure",
         "done": true
       },
       {
-        "label": "Prototype feedback from mentor and team leads",
+        "label": "Realtime message contract (draft)",
+        "done": true
+      },
+      {
+        "label": "Design walkthrough (gate)",
         "done": false
       }
     ]
@@ -135,15 +139,15 @@
         },
         {
           "label": "Sequence diagrams: realtime across instances, AI drafting",
-          "done": false
+          "done": true
         },
         {
           "label": "ADRs: backend stack, infrastructure",
-          "done": false
+          "done": true
         },
         {
           "label": "Contract updated for AI drafts and realtime events",
-          "done": false
+          "done": true
         }
       ]
     },
@@ -270,18 +274,18 @@
     },
     {
       "date": "2026-10-26",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "C4 diagrams + ERD"
     },
     {
       "date": "2026-10-27",
-      "status": "planned",
-      "summary": "Sequence diagrams + design critique"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-10-28",
-      "status": "planned",
-      "summary": "ADRs + contract update"
+      "status": "in_progress",
+      "summary": "Sequences + ADRs"
     },
     {
       "date": "2026-10-29",
@@ -315,6 +319,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-28",
+      "title": "System design: sequences and decisions",
+      "body": "Sequence diagrams for the three hard flows (a move seen live across API instances via the outbox, AI drafting with rate limit and timeout, refresh-token rotation with a long-lived socket), the realtime message contract, and two ADRs: NestJS + Prisma, and AWS with demo and production profiles."
+    },
     {
       "date": "2026-10-26",
       "title": "System design: containers and data model",

@@ -6,7 +6,7 @@
     "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node dist/main.js",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "eslint src test",
+    "lint": "prisma generate && eslint src test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "test": "vitest run"

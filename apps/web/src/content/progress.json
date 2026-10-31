@@ -1,28 +1,28 @@
 {
-  "updatedAt": "2026-10-28",
+  "updatedAt": "2026-10-31",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
-  "currentStageId": "design",
+  "currentStageId": "core",
   "today": {
-    "date": "2026-10-28",
-    "focus": "Stage 3 — finish the design",
+    "date": "2026-10-31",
+    "focus": "Stage 4 — the backend, test first",
     "items": [
       {
-        "label": "Sequence diagrams: live move across instances, AI drafting, token refresh",
+        "label": "NestJS API with Prisma and a real Postgres",
         "done": true
       },
       {
-        "label": "ADR-001 backend stack, ADR-002 infrastructure",
+        "label": "Auth: register, login, refresh rotation with reuse detection, logout, /me",
         "done": true
       },
       {
-        "label": "Realtime message contract (draft)",
+        "label": "Guardrails: type-aware lint, CI job with Postgres",
         "done": true
       },
       {
-        "label": "Design walkthrough (gate)",
+        "label": "Roles and tenant isolation",
         "done": false
       }
     ]
@@ -161,11 +161,11 @@
       "items": [
         {
           "label": "Quality guardrails: lint, hooks, CI gates",
-          "done": false
+          "done": true
         },
         {
           "label": "Auth with refresh-token rotation",
-          "done": false
+          "done": true
         },
         {
           "label": "Workspaces, roles, tenant isolation tests",
@@ -284,23 +284,23 @@
     },
     {
       "date": "2026-10-28",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "Sequences + ADRs"
     },
     {
       "date": "2026-10-29",
-      "status": "planned",
-      "summary": "Quality guardrails"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-10-30",
-      "status": "planned",
-      "summary": "Backend: auth"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-10-31",
-      "status": "planned",
-      "summary": "Backend: roles + tenant isolation"
+      "status": "in_progress",
+      "summary": "Backend: auth + guardrails"
     },
     {
       "date": "2026-11-01",
@@ -319,6 +319,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-10-31",
+      "title": "First real backend: auth",
+      "body": "NestJS API on Postgres, test first: register, login, refresh-token rotation with reuse detection, logout and /me, validated against the OpenAPI contract. A deliberately broken build showed one race test was passing by luck; it now forces the race deterministically. CI runs the API tests against a Postgres service."
+    },
     {
       "date": "2026-10-28",
       "title": "System design: sequences and decisions",

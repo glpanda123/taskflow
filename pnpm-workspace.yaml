@@ -11,3 +11,7 @@ onlyBuiltDependencies:
   - '@prisma/engines'
   - argon2
   - prisma
+
+# One TypeScript for the whole monorepo (tools pick the highest installed version otherwise).
+overrides:
+  typescript: 5.9.3

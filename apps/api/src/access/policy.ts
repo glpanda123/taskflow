@@ -30,7 +30,20 @@ export type Facts = {
 };
 
 export function decide(action: Action, facts: Facts): Decision {
-  // TODO(Ly): write this function so that every row of the table above holds.
-  // Run `pnpm --filter @taskflow/api test:unit` to check: no database needed.
-  throw new Error(`decide(${action}) is not written yet`);
+  // Outside the workspace: hide everything, for every action.
+  if (facts.role === null) return 'not-found';
+
+  switch (action) {
+    case 'project:list':
+      // Every member may list; viewers get a filtered list (done in the query).
+      return 'allow';
+
+    case 'project:create':
+      return facts.role === 'owner' || facts.role === 'admin' ? 'allow' : 'forbidden';
+
+    case 'project:read':
+      if (facts.role !== 'viewer') return 'allow';
+      // A viewer must not learn that a project they weren't invited to exists.
+      return facts.invitedToProject === true ? 'allow' : 'not-found';
+  }
 }

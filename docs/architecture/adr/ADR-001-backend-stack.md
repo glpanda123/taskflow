@@ -9,16 +9,16 @@ The backend must serve the existing OpenAPI contract and the realtime protocol, 
 
 ## Decision
 
-| Concern            | Choice                                                                                                                                                                                        |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Language / runtime | TypeScript on Node 22 (same language as the web app; shares the generated contract types)                                                                                                     |
-| Framework          | **NestJS**: modules, dependency injection, guards for auth and roles, WebSocket gateways, one codebase built as two apps (`api`, `worker`)                                                    |
-| Database access    | **Prisma** for schema, migrations and most queries; raw SQL (`$queryRaw`) where precision matters (outbox claim with `SKIP LOCKED`, partial indexes, `COLLATE "C"` edited into the migration) |
-| Validation         | Request bodies validated against the **OpenAPI schemas** (Ajv), so the contract stays the single source of truth instead of duplicating rules in DTO classes                                  |
-| Auth               | argon2id for passwords; JWT access tokens (15 min) via `jose`; refresh tokens as hashed rows with rotation and family revocation                                                              |
-| Realtime           | NestJS gateway on the plain `ws` adapter (the client uses the browser's native WebSocket); Redis pub/sub via `ioredis`                                                                        |
-| Jobs               | BullMQ on Redis (invitation emails, retries with backoff); outbox relay as a polling loop in the worker                                                                                       |
-| Tests              | Vitest; integration tests against a **real Postgres and Redis in containers** (Testcontainers), including tenant-isolation tests that try to read another workspace's data                    |
+| Concern            | Choice                                                                                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Language / runtime | TypeScript on Node 22 (same language as the web app; shares the generated contract types)                                                                                                                 |
+| Framework          | **NestJS**: modules, dependency injection, guards for auth and roles, WebSocket gateways, one codebase built as two apps (`api`, `worker`)                                                                |
+| Database access    | **Prisma** for schema, migrations and most queries; raw SQL (`$queryRaw`) where precision matters (outbox claim with `SKIP LOCKED`, partial indexes, `COLLATE "C"` edited into the migration)             |
+| Validation         | Request bodies validated against the **OpenAPI schemas** (Ajv), so the contract stays the single source of truth instead of duplicating rules in DTO classes                                              |
+| Auth               | argon2id for passwords; JWT access tokens (15 min) via `jose`; refresh tokens as hashed rows with rotation and family revocation                                                                          |
+| Realtime           | NestJS gateway on the plain `ws` adapter (the client uses the browser's native WebSocket); Redis pub/sub via `ioredis`                                                                                    |
+| Jobs               | BullMQ on Redis (invitation emails, retries with backoff); outbox relay as a polling loop in the worker                                                                                                   |
+| Tests              | Vitest + supertest; integration tests against a **real Postgres** (a service container in CI, a local install in development), including tenant-isolation tests that try to read another workspace's data |
 
 ## Options considered
 

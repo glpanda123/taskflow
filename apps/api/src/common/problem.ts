@@ -28,6 +28,13 @@ export class ProblemException extends Error {
 export const unauthorized = (detail = 'Missing, invalid or expired credentials') =>
   new ProblemException(401, 'unauthorized', 'Authentication required', detail);
 
+export const forbidden = (detail = 'Your role does not allow this action.') =>
+  new ProblemException(403, 'forbidden', 'Forbidden', detail);
+
+/** Same answer for "doesn't exist" and "exists but you may not see it". */
+export const notFound = () =>
+  new ProblemException(404, 'not-found', 'Not found', 'Not found, or you do not have access.');
+
 export const validationFailed = (errors: FieldError[]) =>
   new ProblemException(422, 'validation-error', 'Invalid request', undefined, { errors });
 

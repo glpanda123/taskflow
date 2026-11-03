@@ -1,5 +1,6 @@
 // Built up slice by slice from docs/architecture/02-data-model.md.
 // Session 1 (auth): users, refresh tokens, and the workspace tables /me reads.
+// Session 2 (RBAC): projects and project_viewers.
 
 generator client {
   provider = "prisma-client-js"
@@ -25,8 +26,9 @@ model User {
   avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  refreshTokens RefreshToken[]
-  memberships   Membership[]
+  refreshTokens  RefreshToken[]
+  memberships    Membership[]
+  projectViewers ProjectViewer[]
 
   @@map("users")
 }
@@ -55,6 +57,7 @@ model Workspace {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   memberships Membership[]
+  projects    Project[]
 
   @@map("workspaces")
 }
@@ -70,4 +73,30 @@ model Membership {
 
   @@id([workspaceId, userId])
   @@map("memberships")
+}
+
+model Project {
+  id          String   @id @default(uuid()) @db.Uuid
+  workspaceId String   @map("workspace_id") @db.Uuid
+  name        String
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  viewers   ProjectViewer[]
+
+  @@index([workspaceId])
+  @@map("projects")
+}
+
+/// A viewer membership alone grants nothing: each project a viewer may see has a row here.
+model ProjectViewer {
+  projectId String   @map("project_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  addedAt   DateTime @default(now()) @map("added_at") @db.Timestamptz
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@map("project_viewers")
 }

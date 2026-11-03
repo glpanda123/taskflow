@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-10-31",
+  "updatedAt": "2026-11-03",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-10",
   "currentStageId": "core",
   "today": {
-    "date": "2026-10-31",
+    "date": "2026-11-03",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -23,7 +23,7 @@
       },
       {
         "label": "Roles and tenant isolation",
-        "done": false
+        "done": true
       }
     ]
   },
@@ -169,7 +169,7 @@
         },
         {
           "label": "Workspaces, roles, tenant isolation tests",
-          "done": false
+          "done": true
         },
         {
           "label": "Tasks: optimistic locking (409), ordering",
@@ -299,26 +299,46 @@
     },
     {
       "date": "2026-10-31",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "Backend: auth + guardrails"
     },
     {
       "date": "2026-11-01",
+      "status": "rest",
+      "summary": "No session"
+    },
+    {
+      "date": "2026-11-02",
+      "status": "rest",
+      "summary": "No session"
+    },
+    {
+      "date": "2026-11-03",
+      "status": "shipped",
+      "summary": "Backend: roles + tenant isolation"
+    },
+    {
+      "date": "2026-11-04",
       "status": "planned",
       "summary": "Backend: tasks, 409, ordering"
     },
     {
-      "date": "2026-11-02",
+      "date": "2026-11-05",
       "status": "planned",
       "summary": "Backend: realtime"
     },
     {
-      "date": "2026-11-03",
+      "date": "2026-11-06",
       "status": "planned",
       "summary": "Frontend on the real API, deploy"
     }
   ],
   "log": [
+    {
+      "date": "2026-11-03",
+      "title": "Roles and tenant isolation",
+      "body": "Workspaces and projects on the real API. One pure function decides who may do what (owner, admin, member, viewer); outsiders get the same 404 as for something that doesn't exist, so IDs reveal nothing. 18 unit cases cover the permission table and 9 end-to-end tests try to read and write across workspaces."
+    },
     {
       "date": "2026-10-31",
       "title": "First real backend: auth",

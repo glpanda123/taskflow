@@ -6,7 +6,6 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [swc.vite({ module: { type: 'es6' } })],
   test: {
-    globalSetup: ['./test/global-setup.ts'],
     env: {
       DATABASE_URL:
         process.env.DATABASE_URL ?? 'postgresql://taskflow:taskflow@localhost:5432/taskflow_test',
@@ -14,5 +13,18 @@ export default defineConfig({
     },
     // One database: test files run one after another.
     fileParallelism: false,
+    projects: [
+      // Pure functions, no database: `pnpm test:unit` works on any machine.
+      { extends: true, test: { name: 'unit', include: ['test/unit/**/*.test.ts'] } },
+      // Real HTTP + real Postgres.
+      {
+        extends: true,
+        test: {
+          name: 'e2e',
+          include: ['test/**/*.e2e.test.ts'],
+          globalSetup: ['./test/global-setup.ts'],
+        },
+      },
+    ],
   },
 });

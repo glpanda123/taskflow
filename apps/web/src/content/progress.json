@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-10-31",
+  "updatedAt": "2026-11-03",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
-  "endDate": "2026-11-10",
+  "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-10-31",
+    "date": "2026-11-03",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -23,7 +23,7 @@
       },
       {
         "label": "Roles and tenant isolation",
-        "done": false
+        "done": true
       }
     ]
   },
@@ -169,7 +169,7 @@
         },
         {
           "label": "Workspaces, roles, tenant isolation tests",
-          "done": false
+          "done": true
         },
         {
           "label": "Tasks: optimistic locking (409), ordering",
@@ -299,26 +299,126 @@
     },
     {
       "date": "2026-10-31",
-      "status": "in_progress",
+      "status": "shipped",
       "summary": "Backend: auth + guardrails"
     },
     {
       "date": "2026-11-01",
-      "status": "planned",
-      "summary": "Backend: tasks, 409, ordering"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-02",
-      "status": "planned",
-      "summary": "Backend: realtime"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-03",
+      "status": "shipped",
+      "summary": "Backend: roles + tenant isolation"
+    },
+    {
+      "date": "2026-11-04",
       "status": "planned",
-      "summary": "Frontend on the real API, deploy"
+      "summary": "Backend: tasks"
+    },
+    {
+      "date": "2026-11-05",
+      "status": "planned",
+      "summary": "Backend: edit conflicts (409)"
+    },
+    {
+      "date": "2026-11-06",
+      "status": "planned",
+      "summary": "Backend: drag and drop (move)"
+    },
+    {
+      "date": "2026-11-07",
+      "status": "planned",
+      "summary": "Frontend on the real API: auth, projects"
+    },
+    {
+      "date": "2026-11-08",
+      "status": "planned",
+      "summary": "Frontend on the real API: board"
+    },
+    {
+      "date": "2026-11-09",
+      "status": "planned",
+      "summary": "Deploy to AWS (demo profile)"
+    },
+    {
+      "date": "2026-11-10",
+      "status": "planned",
+      "summary": "Deploy: main screens on production"
+    },
+    {
+      "date": "2026-11-11",
+      "status": "planned",
+      "summary": "Realtime: WebSocket"
+    },
+    {
+      "date": "2026-11-12",
+      "status": "planned",
+      "summary": "Realtime: Redis pub/sub + outbox"
+    },
+    {
+      "date": "2026-11-13",
+      "status": "planned",
+      "summary": "Members and email invitations"
+    },
+    {
+      "date": "2026-11-14",
+      "status": "planned",
+      "summary": "Today, activity log, rate limit, cache"
+    },
+    {
+      "date": "2026-11-15",
+      "status": "planned",
+      "summary": "Buffer + feedback round"
+    },
+    {
+      "date": "2026-11-16",
+      "status": "planned",
+      "summary": "AI drafts on a real LLM"
+    },
+    {
+      "date": "2026-11-17",
+      "status": "planned",
+      "summary": "AI: validation, retries, rate limit"
+    },
+    {
+      "date": "2026-11-18",
+      "status": "planned",
+      "summary": "AI: evals in CI"
+    },
+    {
+      "date": "2026-11-19",
+      "status": "planned",
+      "summary": "MCP server"
+    },
+    {
+      "date": "2026-11-20",
+      "status": "planned",
+      "summary": "MCP server (continued)"
+    },
+    {
+      "date": "2026-11-21",
+      "status": "planned",
+      "summary": "Claude Code skills, hooks, subagents"
+    },
+    {
+      "date": "2026-11-22",
+      "status": "planned",
+      "summary": "Wrap-up: README, demo video"
     }
   ],
   "log": [
+    {
+      "date": "2026-11-03",
+      "title": "Roles and tenant isolation",
+      "body": "Workspaces and projects on the real API. One pure function decides who may do what (owner, admin, member, viewer); outsiders get the same 404 as for something that doesn't exist, so IDs reveal nothing. 18 unit cases cover the permission table and 9 end-to-end tests try to read and write across workspaces."
+    },
     {
       "date": "2026-10-31",
       "title": "First real backend: auth",

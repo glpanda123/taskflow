@@ -9,6 +9,7 @@
  * | project:list     | allow | allow | allow  | allow (sees invited only)    | not-found    |
  * | project:create   | allow | allow | 403    | 403                          | not-found    |
  * | project:read     | allow | allow | allow  | allow if invited, else 404   | not-found    |
+ * | task:create      | allow | allow | allow  | 403 if invited, else 404     | not-found    |
  *
  * Why two different "no" answers:
  * - 403 forbidden: you are inside the workspace and can see the thing, but your role
@@ -18,14 +19,14 @@
  */
 import type { Role } from '@prisma/client';
 
-export type Action = 'project:list' | 'project:create' | 'project:read';
+export type Action = 'project:list' | 'project:create' | 'project:read' | 'task:create';
 
 export type Decision = 'allow' | 'forbidden' | 'not-found';
 
 export type Facts = {
   /** The caller's role in the workspace, or null if they are not a member. */
   role: Role | null;
-  /** Only for project:read: does the caller have a project_viewers row for this project? */
+  /** For project-level actions: does the caller have a project_viewers row for this project? */
   invitedToProject?: boolean;
 };
 

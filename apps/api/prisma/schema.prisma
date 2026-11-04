@@ -1,6 +1,7 @@
 // Built up slice by slice from docs/architecture/02-data-model.md.
 // Session 1 (auth): users, refresh tokens, and the workspace tables /me reads.
 // Session 2 (RBAC): projects and project_viewers.
+// Session 3 (tasks): tasks.
 
 generator client {
   provider = "prisma-client-js"
@@ -18,6 +19,20 @@ enum Role {
   viewer
 }
 
+/// Declaration order is the board's column order (Postgres compares enums by it).
+enum TaskStatus {
+  todo
+  in_progress
+  in_review
+  done
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique @db.Citext
@@ -29,6 +44,8 @@ model User {
   refreshTokens  RefreshToken[]
   memberships    Membership[]
   projectViewers ProjectViewer[]
+  assignedTasks  Task[]          @relation("assignee")
+  createdTasks   Task[]          @relation("creator")
 
   @@map("users")
 }
@@ -58,6 +75,7 @@ model Workspace {
 
   memberships Membership[]
   projects    Project[]
+  tasks       Task[]
 
   @@map("workspaces")
 }
@@ -83,6 +101,7 @@ model Project {
 
   workspace Workspace       @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   viewers   ProjectViewer[]
+  tasks     Task[]
 
   @@index([workspaceId])
   @@map("projects")
@@ -99,4 +118,32 @@ model ProjectViewer {
 
   @@id([projectId, userId])
   @@map("project_viewers")
+}
+
+model Task {
+  id          String     @id @default(uuid()) @db.Uuid
+  /// Copied from the project so tenant filters never need a join.
+  workspaceId String     @map("workspace_id") @db.Uuid
+  projectId   String     @map("project_id") @db.Uuid
+  title       String
+  description String?
+  status      TaskStatus @default(todo)
+  priority    Priority   @default(medium)
+  assigneeId  String?    @map("assignee_id") @db.Uuid
+  dueDate     DateTime?  @map("due_date") @db.Date
+  /// Fractional index, compared byte by byte: the migration adds COLLATE "C".
+  position    String
+  /// Optimistic lock: +1 on every write; a stale version on PATCH/move is a 409.
+  version     Int        @default(1)
+  createdById String     @map("created_by") @db.Uuid
+  createdAt   DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime   @updatedAt @map("updated_at") @db.Timestamptz
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee  User?     @relation("assignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy User      @relation("creator", fields: [createdById], references: [id])
+
+  @@index([projectId, status, position, id])
+  @@map("tasks")
 }

@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-03",
+  "updatedAt": "2026-11-06",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-03",
+    "date": "2026-11-06",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -23,6 +23,10 @@
       },
       {
         "label": "Roles and tenant isolation",
+        "done": true
+      },
+      {
+        "label": "Tasks: create and list, board order, cursor paging",
         "done": true
       }
     ]
@@ -319,63 +323,63 @@
     },
     {
       "date": "2026-11-04",
-      "status": "planned",
-      "summary": "Backend: tasks"
+      "status": "shipped",
+      "summary": "Backend: tasks (create, list)"
     },
     {
       "date": "2026-11-05",
-      "status": "planned",
-      "summary": "Backend: edit conflicts (409)"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-06",
       "status": "planned",
-      "summary": "Backend: drag and drop (move)"
+      "summary": "Backend: edit conflicts (409)"
     },
     {
       "date": "2026-11-07",
       "status": "planned",
-      "summary": "Frontend on the real API: auth, projects"
+      "summary": "Backend: drag and drop (move)"
     },
     {
       "date": "2026-11-08",
       "status": "planned",
-      "summary": "Frontend on the real API: board"
+      "summary": "Frontend on the real API: auth, projects"
     },
     {
       "date": "2026-11-09",
       "status": "planned",
-      "summary": "Deploy to AWS (demo profile)"
+      "summary": "Frontend on the real API: board"
     },
     {
       "date": "2026-11-10",
       "status": "planned",
-      "summary": "Deploy: main screens on production"
+      "summary": "Deploy to AWS (demo profile)"
     },
     {
       "date": "2026-11-11",
       "status": "planned",
-      "summary": "Realtime: WebSocket"
+      "summary": "Deploy: main screens on production"
     },
     {
       "date": "2026-11-12",
       "status": "planned",
-      "summary": "Realtime: Redis pub/sub + outbox"
+      "summary": "Realtime: WebSocket"
     },
     {
       "date": "2026-11-13",
       "status": "planned",
-      "summary": "Members and email invitations"
+      "summary": "Realtime: Redis pub/sub + outbox"
     },
     {
       "date": "2026-11-14",
       "status": "planned",
-      "summary": "Today, activity log, rate limit, cache"
+      "summary": "Members and email invitations"
     },
     {
       "date": "2026-11-15",
       "status": "planned",
-      "summary": "Buffer + feedback round"
+      "summary": "Today, activity log, rate limit, cache"
     },
     {
       "date": "2026-11-16",
@@ -414,6 +418,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-06",
+      "title": "Tasks: create and list",
+      "body": "Tasks on the real API: a new task goes to the bottom of its column with a fractional key, assignees must work in the same workspace, and the board list pages with a keyset cursor (status, position, id). Positions are compared byte by byte (COLLATE \"C\"); a test fails if a migration ever loses that. Viewers can read a board they were invited to but not write to it."
+    },
     {
       "date": "2026-11-03",
       "title": "Roles and tenant isolation",

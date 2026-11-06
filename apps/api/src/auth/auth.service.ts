@@ -3,6 +3,7 @@ import type { LoginRequest, RegisterRequest, Session } from '@taskflow/api-contr
 import { Prisma, type User } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import * as argon2 from 'argon2';
+import { requiredText } from '../common/input';
 import { ProblemException, unauthorized } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -25,10 +26,11 @@ export class AuthService {
   constructor(private readonly prisma: PrismaService) {}
 
   async register(input: RegisterRequest): Promise<IssuedSession> {
+    const name = requiredText(input.name, 'name');
     const passwordHash = await argon2.hash(input.password, { type: argon2.argon2id });
     try {
       const user = await this.prisma.user.create({
-        data: { name: input.name.trim(), email: input.email, passwordHash },
+        data: { name, email: input.email, passwordHash },
       });
       return this.startSession(user, randomUUID());
     } catch (error) {

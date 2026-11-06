@@ -16,11 +16,11 @@ import type { Response } from 'express';
 import { AccessService } from '../access/access.service';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { assertBody } from '../common/contract';
+import { isUuid } from '../common/input';
 import { validationFailed } from '../common/problem';
 import { TasksService } from './tasks.service';
 
 const STATUSES = new Set<string>(['todo', 'in_progress', 'in_review', 'done']);
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** A query parameter that must appear at most once, as plain text. */
 function single(q: Record<string, unknown>, field: string): string | undefined {
@@ -36,7 +36,7 @@ function parseListQuery(q: Record<string, unknown>) {
     throw validationFailed([{ field: 'status', message: 'Unknown status.' }]);
   }
   const assigneeId = single(q, 'assigneeId');
-  if (assigneeId !== undefined && !UUID.test(assigneeId)) {
+  if (assigneeId !== undefined && !isUuid(assigneeId)) {
     throw validationFailed([{ field: 'assigneeId', message: 'Must be a UUID.' }]);
   }
   const rawLimit = single(q, 'limit');

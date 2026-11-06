@@ -46,5 +46,12 @@ export function decide(action: Action, facts: Facts): Decision {
       if (facts.role !== 'viewer') return 'allow';
       // A viewer must not learn that a project they weren't invited to exists.
       return facts.invitedToProject === true ? 'allow' : 'not-found';
+
+    case 'task:create':
+      if (facts.role === 'viewer') {
+        return facts.invitedToProject ? 'forbidden' : 'not-found';
+      } else {
+        return 'allow';
+      }
   }
 }

@@ -4,6 +4,7 @@ import type { CreateProjectRequest, Project } from '@taskflow/api-contract/schem
 import { AccessService } from '../access/access.service';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { assertBody } from '../common/contract';
+import { requiredText } from '../common/input';
 import { PrismaService } from '../prisma/prisma.service';
 
 const toProject = (p: ProjectRow): Project => ({
@@ -48,7 +49,7 @@ export class ProjectsController {
     await this.access.requireWorkspace(req.userId, workspaceId, 'project:create');
     const input = assertBody<CreateProjectRequest>('CreateProjectRequest', body);
     const project = await this.prisma.project.create({
-      data: { workspaceId, name: input.name.trim() },
+      data: { workspaceId, name: requiredText(input.name, 'name') },
     });
     return toProject(project);
   }

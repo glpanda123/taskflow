@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { type Prisma, type TaskStatus, type User } from '@prisma/client';
 import type { CreateTaskRequest, Task, TaskPage } from '@taskflow/api-contract/schema';
 import { generateKeyBetween } from 'fractional-indexing';
+import { isUuid, requiredText } from '../common/input';
 import { validationFailed } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -16,7 +17,14 @@ const encodeCursor = (c: Cursor) => Buffer.from(JSON.stringify(c)).toString('bas
 function decodeCursor(raw: string): Cursor {
   try {
     const c = JSON.parse(Buffer.from(raw, 'base64url').toString()) as Cursor;
-    if (STATUSES.includes(c.s) && typeof c.p === 'string' && typeof c.i === 'string') return c;
+    if (
+      STATUSES.includes(c.s) &&
+      typeof c.p === 'string' &&
+      typeof c.i === 'string' &&
+      isUuid(c.i)
+    ) {
+      return c;
+    }
   } catch {
     // fall through
   }
@@ -50,6 +58,7 @@ export class TasksService {
     createdById: string,
     input: CreateTaskRequest,
   ): Promise<Task> {
+    const title = requiredText(input.title, 'title');
     const status = input.status ?? 'todo';
     if (input.assigneeId) await this.assertAssignable(project.workspaceId, input.assigneeId);
 
@@ -65,7 +74,7 @@ export class TasksService {
         workspaceId: project.workspaceId,
         projectId: project.id,
         createdById,
-        title: input.title.trim(),
+        title,
         description: input.description ?? null,
         status,
         priority: input.priority ?? 'medium',

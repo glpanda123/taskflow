@@ -35,6 +35,16 @@ export const forbidden = (detail = 'Your role does not allow this action.') =>
 export const notFound = () =>
   new ProblemException(404, 'not-found', 'Not found', 'Not found, or you do not have access.');
 
+/** 409 for a stale `version`: the body carries the current resource (ConflictProblem). */
+export const versionConflict = (sentVersion: number, current: { version: number }) =>
+  new ProblemException(
+    409,
+    'version-conflict',
+    'Version conflict',
+    `You edited version ${sentVersion}, but it is now at version ${current.version}.`,
+    { current },
+  );
+
 export const validationFailed = (errors: FieldError[]) =>
   new ProblemException(422, 'validation-error', 'Invalid request', undefined, { errors });
 

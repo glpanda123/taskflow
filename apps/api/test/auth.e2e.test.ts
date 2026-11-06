@@ -77,6 +77,14 @@ describe('POST /auth/register', () => {
       .expect(422);
     expect(res.body.errors).toContainEqual(expect.objectContaining({ field: 'password' }));
   });
+
+  it('rejects a name that is only spaces (422 with the field)', async () => {
+    const res = await api()
+      .post('/api/v1/auth/register')
+      .send({ ...ly, name: '   ' })
+      .expect(422);
+    expect(res.body.errors).toContainEqual(expect.objectContaining({ field: 'name' }));
+  });
 });
 
 describe('POST /auth/login', () => {

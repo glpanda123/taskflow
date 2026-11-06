@@ -2,6 +2,7 @@ import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common
 import type { CreateWorkspaceRequest, Workspace } from '@taskflow/api-contract/schema';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { assertBody } from '../common/contract';
+import { requiredText } from '../common/input';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('workspaces')
@@ -16,7 +17,7 @@ export class WorkspacesController {
     const input = assertBody<CreateWorkspaceRequest>('CreateWorkspaceRequest', body);
     const workspace = await this.prisma.workspace.create({
       data: {
-        name: input.name.trim(),
+        name: requiredText(input.name, 'name'),
         memberships: { create: { userId: req.userId, role: 'owner' } },
       },
     });

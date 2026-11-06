@@ -7,14 +7,23 @@ import { ProblemFilter } from './common/problem';
 import { MeController } from './me/me.controller';
 import { PrismaService } from './prisma/prisma.service';
 import { ProjectsController } from './projects/projects.controller';
+import { TasksController } from './tasks/tasks.controller';
+import { TasksService } from './tasks/tasks.service';
 import { WorkspacesController } from './workspaces/workspaces.controller';
 
 @Module({
-  controllers: [AuthController, MeController, WorkspacesController, ProjectsController],
+  controllers: [
+    AuthController,
+    MeController,
+    WorkspacesController,
+    ProjectsController,
+    TasksController,
+  ],
   providers: [
     PrismaService,
     AuthService,
     AccessService,
+    TasksService,
     { provide: APP_FILTER, useClass: ProblemFilter },
   ],
 })

@@ -30,6 +30,15 @@ const cases: [Action, Facts, Decision][] = [
   ['project:read', { role: null }, 'not-found'],
   // being on a project's viewer list doesn't help someone who left the workspace
   ['project:read', { role: null, invitedToProject: true }, 'not-found'],
+
+  // task:create: anyone who works in the workspace; a viewer can see but not write
+  ['task:create', { role: 'owner' }, 'allow'],
+  ['task:create', { role: 'admin' }, 'allow'],
+  ['task:create', { role: 'member' }, 'allow'],
+  ['task:create', { role: 'viewer', invitedToProject: true }, 'forbidden'],
+  // a viewer who can't even see the project must not learn it exists
+  ['task:create', { role: 'viewer', invitedToProject: false }, 'not-found'],
+  ['task:create', { role: null }, 'not-found'],
 ];
 
 describe('decide()', () => {

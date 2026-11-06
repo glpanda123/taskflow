@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import type { Project, Role } from '@prisma/client';
+import { isUuid } from '../common/input';
 import { forbidden, notFound } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
 import { type Action, decide } from './policy';
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Loads the facts from the database, asks policy.decide(), and turns "no" into
@@ -16,7 +15,7 @@ export class AccessService {
 
   /** For actions on a workspace (list or create its projects). Returns the caller's role. */
   async requireWorkspace(userId: string, workspaceId: string, action: Action): Promise<Role> {
-    if (!UUID.test(workspaceId)) throw notFound();
+    if (!isUuid(workspaceId)) throw notFound();
     const membership = await this.prisma.membership.findUnique({
       where: { workspaceId_userId: { workspaceId, userId } },
     });
@@ -34,7 +33,7 @@ export class AccessService {
     projectId: string,
     action: Action,
   ): Promise<{ project: Project; role: Role }> {
-    if (!UUID.test(projectId)) throw notFound();
+    if (!isUuid(projectId)) throw notFound();
     const project = await this.prisma.project.findUnique({ where: { id: projectId } });
     if (!project) throw notFound();
     const [membership, invite] = await Promise.all([

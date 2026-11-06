@@ -133,6 +133,8 @@ describe('POST /projects/:id/tasks — create', () => {
 
   it('validates against the contract: empty title, bad date', async () => {
     await createTask(website, owner, { title: '' }).expect(422);
+    const blank = await createTask(website, owner, { title: '   ' }).expect(422);
+    expect(blank.body.errors).toContainEqual(expect.objectContaining({ field: 'title' }));
     await createTask(website, owner, { title: 'X', dueDate: '20/11/2026' }).expect(422);
   });
 
@@ -225,6 +227,11 @@ describe('GET /projects/:id/tasks — list', () => {
   it('rejects a bad cursor, status or limit with 422', async () => {
     const base = `/api/v1/projects/${website}/tasks`;
     await api().get(`${base}?cursor=garbage`).set(as(owner)).expect(422);
+    // well-formed JSON, but the id inside is not a UUID: must not reach the database
+    const forged = Buffer.from(JSON.stringify({ s: 'todo', p: 'a0', i: 'not-a-uuid' })).toString(
+      'base64url',
+    );
+    await api().get(`${base}?cursor=${forged}`).set(as(owner)).expect(422);
     await api().get(`${base}?status=archived`).set(as(owner)).expect(422);
     await api().get(`${base}?limit=0`).set(as(owner)).expect(422);
   });

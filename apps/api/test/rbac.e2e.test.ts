@@ -85,6 +85,7 @@ describe('POST /workspaces', () => {
 
   it('needs a name (422) and a login (401)', async () => {
     await api().post('/api/v1/workspaces').set(as(owner)).send({ name: '' }).expect(422);
+    await api().post('/api/v1/workspaces').set(as(owner)).send({ name: '   ' }).expect(422);
     await api().post('/api/v1/workspaces').send({ name: 'Nope' }).expect(401);
   });
 });
@@ -115,6 +116,14 @@ describe('POST /workspaces/:id/projects — who may create', () => {
       expect(res.headers['content-type']).toMatch(/application\/problem\+json/);
     }
     expect(await prisma.project.count()).toBe(0);
+  });
+
+  it('rejects a name that is only spaces (422)', async () => {
+    await api()
+      .post(`/api/v1/workspaces/${acme}/projects`)
+      .set(as(owner))
+      .send({ name: '   ' })
+      .expect(422);
   });
 });
 

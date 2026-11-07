@@ -39,6 +39,14 @@ const cases: [Action, Facts, Decision][] = [
   // a viewer who can't even see the project must not learn it exists
   ['task:create', { role: 'viewer', invitedToProject: false }, 'not-found'],
   ['task:create', { role: null }, 'not-found'],
+
+  // task:update: the same people who may create may edit
+  ['task:update', { role: 'owner' }, 'allow'],
+  ['task:update', { role: 'admin' }, 'allow'],
+  ['task:update', { role: 'member' }, 'allow'],
+  ['task:update', { role: 'viewer', invitedToProject: true }, 'forbidden'],
+  ['task:update', { role: 'viewer', invitedToProject: false }, 'not-found'],
+  ['task:update', { role: null }, 'not-found'],
 ];
 
 describe('decide()', () => {

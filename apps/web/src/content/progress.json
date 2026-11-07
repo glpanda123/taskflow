@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-06",
+  "updatedAt": "2026-11-07",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-06",
+    "date": "2026-11-07",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -27,6 +27,10 @@
       },
       {
         "label": "Tasks: create and list, board order, cursor paging",
+        "done": true
+      },
+      {
+        "label": "Tasks: edit with optimistic locking (409 with the current task)",
         "done": true
       }
     ]
@@ -333,7 +337,7 @@
     },
     {
       "date": "2026-11-06",
-      "status": "planned",
+      "status": "shipped",
       "summary": "Backend: edit conflicts (409)"
     },
     {
@@ -418,6 +422,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-07",
+      "title": "Edit conflicts: 409",
+      "body": "PATCH /tasks/{id} only writes if the task is still at the version the client read, in one statement; otherwise it answers 409 with the current task so the client can show what changed and retry. A deterministic test makes two writes race on the same version: exactly one wins. Removing the version condition fails five tests."
+    },
     {
       "date": "2026-11-06",
       "title": "Tasks: create and list",

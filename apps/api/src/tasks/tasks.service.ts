@@ -1,9 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { type Prisma, type TaskStatus, type User } from '@prisma/client';
-import type { CreateTaskRequest, Task, TaskPage } from '@taskflow/api-contract/schema';
+import { Prisma, type TaskStatus, type User } from '@prisma/client';
+import type {
+  CreateTaskRequest,
+  Task,
+  TaskPage,
+  UpdateTaskRequest,
+} from '@taskflow/api-contract/schema';
 import { generateKeyBetween } from 'fractional-indexing';
 import { isUuid, requiredText } from '../common/input';
-import { validationFailed } from '../common/problem';
+import { notFound, validationFailed, versionConflict } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
 
 /** Board column order; matches the TaskStatus enum order in Postgres. */
@@ -122,6 +127,63 @@ export class TasksService {
           ? encodeCursor({ s: lastRow.status, p: lastRow.position, i: lastRow.id })
           : null,
     };
+  }
+
+  async get(taskId: string): Promise<Task> {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: { assignee: true },
+    });
+    if (!task) throw notFound();
+    return toTask(task);
+  }
+
+  /**
+   * PATCH: only the fields sent change; `null` clears a nullable field.
+   * The write itself is updateIfVersion(); this method turns its answer into 200 or 409.
+   */
+  async update(task: { id: string; workspaceId: string }, input: UpdateTaskRequest): Promise<Task> {
+    const changes: Prisma.TaskUncheckedUpdateManyInput = {};
+    if (input.title !== undefined) changes.title = requiredText(input.title, 'title');
+    if (input.description !== undefined) changes.description = input.description;
+    if (input.priority !== undefined) changes.priority = input.priority;
+    if (input.dueDate !== undefined) {
+      changes.dueDate = input.dueDate ? new Date(`${input.dueDate}T00:00:00Z`) : null;
+    }
+    if (input.assigneeId !== undefined) {
+      if (input.assigneeId) await this.assertAssignable(task.workspaceId, input.assigneeId);
+      changes.assigneeId = input.assigneeId;
+    }
+
+    if (await this.updateIfVersion(task.id, input.version, changes)) return this.get(task.id);
+    // 0 rows: someone saved in between (or deleted it). Send back what is there now.
+    const current = await this.get(task.id);
+    throw versionConflict(input.version, current);
+  }
+
+  /**
+   * TODO(Ly): the optimistic-lock write, in ONE statement.
+   * Apply `changes` and bump `version` by 1, but only if the stored version is
+   * still `expectedVersion`. Return true if this call changed the row, false if not.
+   * Hint: AuthService.claim() does the same thing for refresh tokens (Q13).
+   */
+  async updateIfVersion(
+    taskId: string,
+    expectedVersion: number,
+    changes: Prisma.TaskUncheckedUpdateManyInput,
+  ): Promise<boolean> {
+    try {
+      await this.prisma.task.update({
+        data: { ...changes, version: expectedVersion + 1 },
+        where: { id: taskId, version: expectedVersion },
+      });
+      return true;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return false;
+      }
+      throw error;
+    }
   }
 
   /** Tenant rule: only someone who works in the same workspace can be assigned. */

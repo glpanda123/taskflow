@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Project, Role } from '@prisma/client';
+import type { Project, Role, Task } from '@prisma/client';
 import { isUuid } from '../common/input';
 import { forbidden, notFound } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
@@ -47,6 +47,19 @@ export class AccessService {
     const role = membership?.role ?? null;
     this.enforce(decide(action, { role, invitedToProject: invite !== null }));
     return { project, role: role! };
+  }
+
+  /** For actions on one task: the task's project decides, never anything from the URL. */
+  async requireTask(
+    userId: string,
+    taskId: string,
+    action: Action,
+  ): Promise<{ task: Task; project: Project; role: Role }> {
+    if (!isUuid(taskId)) throw notFound();
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) throw notFound();
+    const { project, role } = await this.requireProject(userId, task.projectId, action);
+    return { task, project, role };
   }
 
   private enforce(decision: ReturnType<typeof decide>) {

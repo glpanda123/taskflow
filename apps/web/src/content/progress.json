@@ -181,7 +181,7 @@
         },
         {
           "label": "Tasks: optimistic locking (409), ordering",
-          "done": true
+          "done": false
         },
         {
           "label": "Realtime over Redis pub/sub",

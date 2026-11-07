@@ -172,11 +172,15 @@ export class TasksService {
     expectedVersion: number,
     changes: Prisma.TaskUncheckedUpdateManyInput,
   ): Promise<boolean> {
-    await this.prisma.task.update({
-      data: changes,
-      where: { id: taskId, version: expectedVersion },
-    });
-    throw new Error('updateIfVersion is not written yet');
+    try {
+      await this.prisma.task.update({
+        data: { ...changes, version: expectedVersion + 1 },
+        where: { id: taskId, version: expectedVersion },
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
   }
 
   /** Tenant rule: only someone who works in the same workspace can be assigned. */

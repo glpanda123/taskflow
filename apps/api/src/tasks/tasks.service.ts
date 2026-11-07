@@ -172,6 +172,10 @@ export class TasksService {
     expectedVersion: number,
     changes: Prisma.TaskUncheckedUpdateManyInput,
   ): Promise<boolean> {
+    await this.prisma.task.update({
+      data: changes,
+      where: { id: taskId, version: expectedVersion },
+    });
     throw new Error('updateIfVersion is not written yet');
   }
 

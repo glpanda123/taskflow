@@ -50,6 +50,7 @@ export function decide(action: Action, facts: Facts): Decision {
       return facts.invitedToProject === true ? 'allow' : 'not-found';
 
     case 'task:create':
+    case 'task:update':
       if (facts.role === 'viewer') {
         return facts.invitedToProject ? 'forbidden' : 'not-found';
       } else {

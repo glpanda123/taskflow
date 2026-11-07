@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { type Prisma, type TaskStatus, type User } from '@prisma/client';
+import { Prisma, type TaskStatus, type User } from '@prisma/client';
 import type {
   CreateTaskRequest,
   Task,
@@ -179,7 +179,10 @@ export class TasksService {
       });
       return true;
     } catch (error) {
-      return false;
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        return false;
+      }
+      throw error;
     }
   }
 

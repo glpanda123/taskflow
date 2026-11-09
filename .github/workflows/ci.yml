@@ -60,3 +60,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @taskflow/api exec prisma generate
       - run: pnpm --filter @taskflow/api test
+
+  # The image the demo server runs (infra/aws). Built on every PR so a broken
+  # Dockerfile shows up here, not in the deploy.
+  api-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f apps/api/Dockerfile -t taskflow-api:ci .

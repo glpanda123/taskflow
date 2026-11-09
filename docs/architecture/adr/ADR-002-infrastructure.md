@@ -41,3 +41,13 @@ The target is 99.9% availability for ~35 requests/s and ~4k WebSocket connection
 - Always-on pieces (load balancer, database, Redis) cost money even when idle; the demo stack can be stopped between interviews. Prices to be checked in the AWS pricing calculator before creating anything.
 - The API stays stateless (JWTs, no local sessions), so adding tasks behind the load balancer needs no code change.
 - Migrations run as a separate step in the deploy before new API tasks start; a migration must work with both the old and the new code (expand, then contract).
+
+## Update 2026-11-09: the demo runs on the fallback
+
+Priced before creating anything, as this ADR asks: the demo profile above (ALB with two public IPv4
+addresses, RDS `db.t4g.micro`, one Fargate task) comes to roughly **$65–70 a month in ap-southeast-1**,
+twice the $30 budget, and a new account's free-plan credits ($100–200) would last 1.5–3 months.
+The demo therefore runs on the fallback listed above: **one EC2 instance with Docker Compose**
+(~$13 a month, see [`infra/aws`](../../../infra/aws/README.md)). Nothing in the application changes:
+the API is still stateless, migrations still run before the new API starts, and the production
+profile is still the documented design.

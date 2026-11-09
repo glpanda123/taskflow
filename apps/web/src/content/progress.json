@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-09",
+  "updatedAt": "2026-11-10",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-09",
+    "date": "2026-11-10",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -39,6 +39,10 @@
       },
       {
         "label": "Web app on the real API: sign-up, onboarding, board (other screens show Coming soon)",
+        "done": true
+      },
+      {
+        "label": "Deploy setup: Dockerfile, CloudFormation, deploy workflow (EC2 demo profile)",
         "done": true
       }
     ]
@@ -430,6 +434,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-10",
+      "title": "Ready to deploy: priced first",
+      "body": "Priced the ADR-002 demo profile before creating anything: ECS Fargate, a load balancer and RDS come to about $65-70 a month in Singapore, twice the $30 budget. The demo uses the fallback the ADR already named: one EC2 instance with Docker Compose (Postgres, API, Caddy for HTTPS), about $13 a month. One CloudFormation file creates it; GitHub Actions deploys through an OIDC role and SSM Run Command, with no SSH port and no AWS keys in GitHub. Migrations run before the new API starts."
+    },
     {
       "date": "2026-11-09",
       "title": "The web app on the real API",

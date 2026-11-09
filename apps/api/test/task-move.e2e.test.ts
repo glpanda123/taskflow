@@ -141,6 +141,12 @@ describe('POST /tasks/:id/move — conflicts and stale boards', () => {
     expect((await board()).todo).toEqual(['A', 'B', 'C']);
   });
 
+  it('rejects neighbours that are no longer adjacent: the client must reload (422)', async () => {
+    // The client's board still shows A directly above C, but B sits between them.
+    await move('P', { version: 1, status: 'todo', afterId: ids.A, beforeId: ids.C }).expect(422);
+    expect((await board()).todo).toEqual(['A', 'B', 'C']);
+  });
+
   it('rejects neighbours in the wrong order (422)', async () => {
     await move('P', { version: 1, status: 'todo', afterId: ids.C, beforeId: ids.A }).expect(422);
   });

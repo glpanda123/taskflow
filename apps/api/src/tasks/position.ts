@@ -36,11 +36,13 @@ export function positionBetween(
     return i;
   };
 
-  // Both given: they must be in that order. (Adjacent or not, a key between them is fine.)
+  // Both given: they must be next to each other, in that order. If another card sits
+  // between them now, the client's board is stale: a key "between" them could be that
+  // card's own key, and two cards would share a position.
   if (afterId && beforeId) {
     const a = indexOf(afterId, 'afterId');
     const b = indexOf(beforeId, 'beforeId');
-    if (a >= b) throw new BadNeighbour('beforeId');
+    if (b !== a + 1) throw new BadNeighbour('beforeId');
     return generateKeyBetween(column[a]!.position, column[b]!.position);
   }
 

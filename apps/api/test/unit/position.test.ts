@@ -52,6 +52,13 @@ describe('positionBetween()', () => {
     );
   });
 
+  it('rejects two neighbours that are not next to each other (stale board)', () => {
+    // The client thinks A and C are adjacent, but B is between them now. A key "between
+    // A and C" could be B's own key, so two cards would share a position.
+    const fresh = [A, { id: 'B', position: 'a0V' }, { id: 'C', position: 'a1' }];
+    expect(() => positionBetween(fresh, 'A', 'C')).toThrow(BadNeighbour);
+  });
+
   it('rejects neighbours given in the wrong order', () => {
     expect(() => positionBetween(column, 'C', 'A')).toThrow(BadNeighbour);
     expect(() => positionBetween(column, 'B', 'B')).toThrow(BadNeighbour);

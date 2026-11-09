@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-07",
+  "updatedAt": "2026-11-09",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-07",
+    "date": "2026-11-09",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -31,6 +31,10 @@
       },
       {
         "label": "Tasks: edit with optimistic locking (409 with the current task)",
+        "done": true
+      },
+      {
+        "label": "Tasks: drag and drop (move) with fractional keys",
         "done": true
       }
     ]
@@ -181,7 +185,7 @@
         },
         {
           "label": "Tasks: optimistic locking (409), ordering",
-          "done": false
+          "done": true
         },
         {
           "label": "Realtime over Redis pub/sub",
@@ -342,7 +346,7 @@
     },
     {
       "date": "2026-11-07",
-      "status": "planned",
+      "status": "shipped",
       "summary": "Backend: drag and drop (move)"
     },
     {
@@ -422,6 +426,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-09",
+      "title": "Drag and drop on the real API",
+      "body": "POST /tasks/{id}/move: the client names the neighbours, the server picks a fractional key between them, so a move writes one row and never renumbers the column. The key logic is a pure function with its own unit tests; neighbours from another column, another project or in the wrong order are a 422, and a stale version is the same 409 as an edit."
+    },
     {
       "date": "2026-11-07",
       "title": "Edit conflicts: 409",

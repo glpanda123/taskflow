@@ -48,16 +48,15 @@ export function positionBetween(
   // is directly below it now (or nothing, if it is the last card).
   if (afterId) {
     const a = indexOf(afterId, 'afterId');
-    return generateKeyBetween(column[a - 1]!.position, column[a]?.position ?? null);
+    return generateKeyBetween(column[a]!.position, column[a + 1]?.position ?? null);
   }
 
   // Only "below" given: the mirror image of the branch above.
   if (beforeId) {
-    // TODO(Ly): write this branch. The upper bound is the `beforeId` card;
-    // the lower bound is whatever is directly ABOVE it now (or nothing, if it is the first).
-    const a = indexOf(beforeId, 'beforeId');
-    return generateKeyBetween(column[a]!.position, column[a + 1]?.position ?? null);
-    throw new Error('positionBetween: the beforeId branch is not written yet');
+    // The upper bound is that card; the lower bound is whatever is directly ABOVE it
+    // now (or nothing, if it is the first card).
+    const b = indexOf(beforeId, 'beforeId');
+    return generateKeyBetween(column[b - 1]?.position ?? null, column[b]!.position);
   }
 
   // Neither given: the bottom of the column.

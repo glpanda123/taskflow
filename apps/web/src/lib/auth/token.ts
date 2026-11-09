@@ -6,6 +6,22 @@
 let accessToken: string | null = null;
 const listeners = new Set<() => void>();
 
+/**
+ * Bumped on logout. A refresh that started before the logout must not install its
+ * token after it (the user would be logged back in), so it checks this number first.
+ */
+let sessionGeneration = 0;
+
+export function getSessionGeneration() {
+  return sessionGeneration;
+}
+
+/** Logout: forget the token, and make any refresh already in flight discard its result. */
+export function endSession() {
+  sessionGeneration += 1;
+  setAccessToken(null);
+}
+
 export function getAccessToken() {
   return accessToken;
 }

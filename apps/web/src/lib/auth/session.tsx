@@ -22,7 +22,7 @@ import {
 } from 'react';
 import { api, refreshAccessToken } from '@/lib/api/client';
 import { unwrap } from '@/lib/api/errors';
-import { getAccessToken, onAccessTokenChange, setAccessToken } from './token';
+import { endSession, getAccessToken, onAccessTokenChange, setAccessToken } from './token';
 
 type AuthStatus = 'loading' | 'authenticated' | 'anonymous';
 
@@ -64,8 +64,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login: async (body) => startSession(await unwrap(api.POST('/auth/login', { body }))),
       register: async (body) => startSession(await unwrap(api.POST('/auth/register', { body }))),
       logout: async () => {
-        await api.POST('/auth/logout'); // best effort: we log out locally either way
-        setAccessToken(null);
+        endSession(); // first, so a refresh in flight can't log the user back in
+        await api.POST('/auth/logout'); // best effort: we are logged out locally either way
         qc.removeQueries();
       },
     }),

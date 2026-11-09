@@ -7,7 +7,7 @@
  */
 import type { paths } from '@taskflow/api-contract';
 import createClient, { type Middleware } from 'openapi-fetch';
-import { getAccessToken, setAccessToken } from '@/lib/auth/token';
+import { getAccessToken, getSessionGeneration, setAccessToken } from '@/lib/auth/token';
 
 export const api = createClient<paths>({ baseUrl: '/api/v1' });
 
@@ -21,12 +21,15 @@ const AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/log
 let refreshing: Promise<string | null> | null = null;
 
 export function refreshAccessToken(): Promise<string | null> {
+  const generation = getSessionGeneration();
   refreshing ??= fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'same-origin' })
     .then(async (res) =>
       res.ok ? ((await res.json()) as { accessToken: string }).accessToken : null,
     )
     .catch(() => null)
     .then((token) => {
+      // The user logged out while this refresh was in flight: don't log them back in.
+      if (getSessionGeneration() !== generation) return null;
       setAccessToken(token); // null → logged out; the route guard sends the user to /login
       return token;
     })

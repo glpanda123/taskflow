@@ -1,7 +1,7 @@
 # What runs on the demo server (one EC2 instance, ADR-002 fallback profile).
 # Values come from /opt/taskflow/.env, written once by the instance's first boot:
 # POSTGRES_PASSWORD and JWT_SECRET are generated there and never leave the server.
-# API_IMAGE is set by deploy.sh for each release.
+# API_IMAGE is written to the same .env by deploy.sh on each release.
 services:
   db:
     image: postgres:16-alpine

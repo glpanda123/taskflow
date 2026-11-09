@@ -9,11 +9,23 @@ registry="${image%%/*}"
 region="$(echo "$registry" | cut -d. -f4)"
 
 aws ecr get-login-password --region "$region" | docker login --username AWS --password-stdin "$registry"
-export API_IMAGE="$image"
+# Remember the release in .env, so later Compose commands (logs, restart) still work.
+sed -i '/^API_IMAGE=/d' .env
+echo "API_IMAGE=$image" >> .env
 
 docker compose pull api
 docker compose up -d db
 docker compose up -d --no-deps caddy
+# A changed Caddyfile is not a Compose change, so tell the running Caddy to reload it.
+reloaded=no
+for _ in $(seq 1 10); do
+  if docker compose exec -T caddy caddy reload --config /etc/caddy/Caddyfile --adapter caddyfile; then
+    reloaded=yes
+    break
+  fi
+  sleep 1
+done
+[ "$reloaded" = yes ] || { echo "Caddy did not reload its config" >&2; exit 1; }
 # Migrations first, with the NEW image, before the new API starts.
 docker compose run --rm api ./node_modules/.bin/prisma migrate deploy
 docker compose up -d api

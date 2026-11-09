@@ -102,6 +102,8 @@ Resources:
             mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
           fi
           mkdir -p /opt/taskflow && cd /opt/taskflow
+          # Stop tracing first: the trace goes to the boot log and would print the secrets.
+          set +x
           # Generated here, readable by root only, never sent anywhere.
           if [ ! -f .env ]; then
             umask 077

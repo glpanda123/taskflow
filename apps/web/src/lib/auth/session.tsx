@@ -20,7 +20,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from 'react';
-import { api } from '@/lib/api/client';
+import { api, refreshAccessToken } from '@/lib/api/client';
 import { unwrap } from '@/lib/api/errors';
 import { getAccessToken, onAccessTokenChange, setAccessToken } from './token';
 
@@ -43,13 +43,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const token = useSyncExternalStore(onAccessTokenChange, getAccessToken, () => null);
 
   // On load: the access token is gone (memory only), so try the refresh cookie once.
+  // Through the shared single-flight refresh: React runs this effect twice in development,
+  // and two refreshes with the same single-use cookie look like theft to the server.
   useEffect(() => {
-    api
-      .POST('/auth/refresh')
-      .then(({ data }) => {
-        if (data) setAccessToken(data.accessToken);
-      })
-      .finally(() => setRestoring(false));
+    void refreshAccessToken().finally(() => setRestoring(false));
   }, []);
 
   const startSession = useCallback(

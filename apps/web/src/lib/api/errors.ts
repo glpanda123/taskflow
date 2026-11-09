@@ -46,8 +46,17 @@ export function conflictTask(error: unknown): Task | null {
   return (error.problem as ConflictProblem).current ?? null;
 }
 
+/**
+ * The real API is built slice by slice; a screen whose endpoint doesn't exist there yet
+ * gets the server's generic 404 (no problem `type`), not a TaskFlow problem.
+ */
+export function notBuiltYet(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 404 && error.problem.type === 'about:blank';
+}
+
 /** One human-readable line for a toast or an inline error. */
 export function errorMessage(error: unknown): string {
+  if (notBuiltYet(error)) return 'Coming soon: this part is not on the real server yet.';
   if (error instanceof ApiError) return error.problem.detail ?? error.problem.title;
   return 'Something went wrong. Check your connection and try again.';
 }

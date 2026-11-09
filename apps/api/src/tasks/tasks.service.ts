@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma, type TaskStatus, type User } from '@prisma/client';
 import type {
   CreateTaskRequest,
+  MoveTaskRequest,
   Task,
   TaskPage,
   UpdateTaskRequest,
@@ -10,6 +11,7 @@ import { generateKeyBetween } from 'fractional-indexing';
 import { isUuid, requiredText } from '../common/input';
 import { notFound, validationFailed, versionConflict } from '../common/problem';
 import { PrismaService } from '../prisma/prisma.service';
+import { BadNeighbour, positionBetween } from './position';
 
 /** Board column order; matches the TaskStatus enum order in Postgres. */
 const STATUSES: TaskStatus[] = ['todo', 'in_progress', 'in_review', 'done'];
@@ -184,6 +186,37 @@ export class TasksService {
       }
       throw error;
     }
+  }
+
+  /**
+   * Drag and drop: a new status and/or a place between two cards. The server owns
+   * `position`; only this one row is written. Same 409 rule as PATCH.
+   */
+  async move(task: { id: string; projectId: string }, input: MoveTaskRequest): Promise<Task> {
+    // The target column as it is now, in board order, without the card being moved.
+    // A column is at most a few hundred cards in v1, so reading its keys is cheap.
+    const column = await this.prisma.task.findMany({
+      where: { projectId: task.projectId, status: input.status, id: { not: task.id } },
+      orderBy: [{ position: 'asc' }, { id: 'asc' }],
+      select: { id: true, position: true },
+    });
+
+    let position: string;
+    try {
+      position = positionBetween(column, input.afterId ?? null, input.beforeId ?? null);
+    } catch (error) {
+      if (error instanceof BadNeighbour) {
+        throw validationFailed([
+          { field: error.field, message: 'Not a task in the target column, in this order.' },
+        ]);
+      }
+      throw error;
+    }
+
+    const changes = { status: input.status, position };
+    if (await this.updateIfVersion(task.id, input.version, changes)) return this.get(task.id);
+    const current = await this.get(task.id);
+    throw versionConflict(input.version, current);
   }
 
   /** Tenant rule: only someone who works in the same workspace can be assigned. */

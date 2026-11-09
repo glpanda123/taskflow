@@ -164,10 +164,9 @@ export class TasksService {
   }
 
   /**
-   * TODO(Ly): the optimistic-lock write, in ONE statement.
-   * Apply `changes` and bump `version` by 1, but only if the stored version is
-   * still `expectedVersion`. Return true if this call changed the row, false if not.
-   * Hint: AuthService.claim() does the same thing for refresh tokens (Q13).
+   * The optimistic-lock write, in ONE statement: apply `changes` and bump `version`,
+   * but only if the stored version is still `expectedVersion`. True if this call
+   * changed the row; false if another write got there first (Prisma error P2025).
    */
   async updateIfVersion(
     taskId: string,

@@ -36,6 +36,10 @@
       {
         "label": "Tasks: drag and drop (move) with fractional keys",
         "done": true
+      },
+      {
+        "label": "Web app on the real API: sign-up, onboarding, board (other screens show Coming soon)",
+        "done": true
       }
     ]
   },
@@ -351,13 +355,13 @@
     },
     {
       "date": "2026-11-08",
-      "status": "planned",
-      "summary": "Frontend on the real API: auth, projects"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-09",
-      "status": "planned",
-      "summary": "Frontend on the real API: board"
+      "status": "shipped",
+      "summary": "Frontend on the real API: auth, projects, board"
     },
     {
       "date": "2026-11-10",
@@ -426,6 +430,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-09",
+      "title": "The web app on the real API",
+      "body": "Sign-up, onboarding and the board now run against the NestJS API: Next forwards /api/v1 to it, so the browser sees one origin and the SameSite=Strict refresh cookie just works. An expired access token is refreshed once and the request replayed; refreshes are single-flight, because the refresh token is single-use and two parallel refreshes look like theft. Screens whose endpoints come later say Coming soon. The public prototype stays on the mock API."
+    },
     {
       "date": "2026-11-09",
       "title": "Drag and drop on the real API",

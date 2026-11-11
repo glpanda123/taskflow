@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-10",
+  "updatedAt": "2026-11-11",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-10",
+    "date": "2026-11-11",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -44,6 +44,14 @@
       {
         "label": "Deploy setup: Dockerfile, CloudFormation, deploy workflow (EC2 demo profile)",
         "done": true
+      },
+      {
+        "label": "API live on AWS over HTTPS (one EC2 instance, deployed from GitHub Actions)",
+        "done": true
+      },
+      {
+        "label": "Web app on the production API",
+        "done": false
       }
     ]
   },
@@ -369,18 +377,18 @@
     },
     {
       "date": "2026-11-10",
-      "status": "planned",
-      "summary": "Deploy to AWS (demo profile)"
+      "status": "shipped",
+      "summary": "Deploy setup: Dockerfile, CloudFormation, deploy workflow"
     },
     {
       "date": "2026-11-11",
-      "status": "planned",
-      "summary": "Deploy: main screens on production"
+      "status": "shipped",
+      "summary": "API live on AWS over HTTPS"
     },
     {
       "date": "2026-11-12",
       "status": "planned",
-      "summary": "Realtime: WebSocket"
+      "summary": "Web app on the production API, then realtime: WebSocket"
     },
     {
       "date": "2026-11-13",
@@ -434,6 +442,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-11",
+      "title": "The API is live on AWS",
+      "body": "Created the stack, set three repository variables and ran the deploy workflow: it builds the image, pushes it to ECR, and the server pulls it, runs migrations, then starts the new API behind Caddy with HTTPS. The first run failed at the OIDC step. Repositories created after July 2026 send a subject that carries the owner and repository IDs (repo:OWNER@ID/NAME@ID:ref:...), so the name-only subject in the role's trust policy never matched. CloudTrail showed the real value; the template now takes the exact subject as a parameter, and the second run went green. Next: point the web app at this API."
+    },
     {
       "date": "2026-11-10",
       "title": "Ready to deploy: priced first",

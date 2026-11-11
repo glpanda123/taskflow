@@ -36,6 +36,15 @@ new image → start the new API → wait until it answers.
 4. **Actions → Deploy API → Run workflow** on `master`. Later merges that touch the API deploy by themselves.
 5. Open the stack output `ApiBaseUrl` + `/me`: a JSON 401 problem means the API is live over HTTPS.
 
+## If the deploy fails with "Not authorized to perform sts:AssumeRoleWithWebIdentity"
+
+The role's trust policy compares the token's `sub` claim with the stack parameter
+`GitHubSubject`, and they differ. Find the real value in **CloudTrail → Event history**
+(same region): event name `AssumeRoleWithWebIdentity`, field `userIdentity.userName`.
+Then CloudFormation → the stack → Update → _Use existing template_ → set `GitHubSubject`
+to that value. Repositories created after July 2026 use
+`repo:OWNER@OWNER_ID/NAME@REPO_ID:ref:refs/heads/master`.
+
 ## Day to day
 
 - **Logs:** EC2 → the instance → Connect → _Session Manager_, then

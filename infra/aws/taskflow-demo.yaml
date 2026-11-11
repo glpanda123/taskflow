@@ -6,10 +6,15 @@ Description: >-
   Command (no SSH, no stored AWS keys). Uses the account's default VPC.
 
 Parameters:
-  GitHubRepository:
+  GitHubSubject:
     Type: String
-    Default: glpanda123/taskflow
-    Description: owner/name of the repository whose master branch may deploy.
+    Default: repo:glpanda123@29234732/taskflow@1422935554:ref:refs/heads/master
+    Description: >-
+      The exact OIDC subject (sub claim) that may deploy: this repository's master branch.
+      Repositories created after July 2026 carry the owner and repository IDs after the
+      names (repo:OWNER@OWNER_ID/NAME@REPO_ID:ref:refs/heads/BRANCH); older ones use
+      repo:OWNER/NAME:ref:refs/heads/BRANCH. A failed attempt shows the real value in
+      CloudTrail (event AssumeRoleWithWebIdentity, field userIdentity.userName).
   InstanceType:
     Type: String
     Default: t3.micro
@@ -147,7 +152,7 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubRepository}:ref:refs/heads/master
+                token.actions.githubusercontent.com:sub: !Ref GitHubSubject
       Policies:
         - PolicyName: push-image-and-deploy
           PolicyDocument:

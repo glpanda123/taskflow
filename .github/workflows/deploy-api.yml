@@ -1,0 +1,76 @@
+# Builds the API image, pushes it to ECR, and deploys it to the demo server through
+# SSM Run Command. AWS access is an OIDC role (no stored keys); see infra/aws/README.md.
+# Does nothing until the repository variables below exist.
+name: Deploy API
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - apps/api/**
+      - packages/api-contract/**
+      - infra/aws/compose.yaml
+      - infra/aws/Caddyfile
+      - infra/aws/deploy.sh
+      - pnpm-lock.yaml
+      - .github/workflows/deploy-api.yml
+
+permissions:
+  id-token: write # to request the OIDC token AWS trusts
+  contents: read
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.AWS_DEPLOY_ROLE_ARN != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      INSTANCE_ID: ${{ vars.AWS_INSTANCE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push the image
+        id: image
+        run: |
+          image="${{ steps.ecr.outputs.registry }}/taskflow-api:${GITHUB_SHA}"
+          docker build -f apps/api/Dockerfile -t "$image" .
+          docker push "$image"
+          echo "uri=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy on the server (SSM Run Command)
+        run: |
+          base="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${GITHUB_SHA}/infra/aws"
+          script="set -euo pipefail; cd /opt/taskflow"
+          for f in compose.yaml Caddyfile deploy.sh; do script="$script; curl -fsSL $base/$f -o $f"; done
+          script="$script; bash deploy.sh ${{ steps.image.outputs.uri }}"
+          params="$(jq -n --arg s "$script" '{commands: [$s]}')"
+          id="$(aws ssm send-command --instance-ids "$INSTANCE_ID" \
+            --document-name AWS-RunShellScript --comment "deploy ${GITHUB_SHA::7}" \
+            --parameters "$params" --query Command.CommandId --output text)"
+          echo "SSM command $id"
+          for _ in $(seq 1 90); do
+            status="$(aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+              --query Status --output text 2>/dev/null || echo Pending)"
+            case "$status" in
+              Pending|InProgress|Delayed) sleep 10 ;;
+              *) break ;;
+            esac
+          done
+          aws ssm get-command-invocation --command-id "$id" --instance-id "$INSTANCE_ID" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "Status: $status"
+          test "$status" = Success

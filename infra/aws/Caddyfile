@@ -1,0 +1,11 @@
+# SITE_ADDRESS is a host name such as 13.250.1.2.sslip.io: Caddy obtains and renews
+# its HTTPS certificate automatically. Only the API is served; anything else is a 404.
+{$SITE_ADDRESS} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+	handle {
+		respond "Not found" 404
+	}
+}

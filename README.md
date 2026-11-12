@@ -6,6 +6,8 @@ Built contract-first: an OpenAPI spec is the single source of truth for the web 
 
 Status: prototype in progress. **Build status:** https://taskflow-blond-gamma.vercel.app/status (data: `apps/web/src/content/progress.json`, updated at the end of each session).
 
+**Live app:** https://taskflow-u8sb.vercel.app (the same web app on the real API: NestJS and Postgres on AWS; sign-up, projects and the board work, other screens say Coming soon).
+
 **Live prototype:** https://taskflow-blond-gamma.vercel.app (runs on a mock API, so data lives in your browser tab and resets on reload; try `/dev` for the 409 conflict flow). Every merge to `master` deploys automatically on Vercel; every pull request gets a preview URL.
 
 ## Repository layout

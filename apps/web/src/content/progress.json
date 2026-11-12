@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-11",
+  "updatedAt": "2026-11-12",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-11",
+    "date": "2026-11-12",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -51,6 +51,10 @@
       },
       {
         "label": "Web app on the production API",
+        "done": true
+      },
+      {
+        "label": "Realtime: WebSocket gateway",
         "done": false
       }
     ]
@@ -387,13 +391,13 @@
     },
     {
       "date": "2026-11-12",
-      "status": "planned",
-      "summary": "Web app on the production API, then realtime: WebSocket"
+      "status": "shipped",
+      "summary": "Web app on the production API"
     },
     {
       "date": "2026-11-13",
       "status": "planned",
-      "summary": "Realtime: Redis pub/sub + outbox"
+      "summary": "Realtime: WebSocket"
     },
     {
       "date": "2026-11-14",
@@ -442,6 +446,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-12",
+      "title": "The web app runs on the production API",
+      "body": "A second Vercel project serves the same web app with the mock turned off: sign-up, onboarding and the board now read and write Postgres on the AWS server, through Next's same-origin rewrite. The prototype with sample data stays at its own address. One bug on the way: /api/v1 answered 404 although API_URL was set. Turborepo runs builds in strict env mode and only passes declared variables; NEXT_PUBLIC_* is inferred, API_URL was not, so the rewrite was never built. Declaring it in turbo.json fixed it."
+    },
     {
       "date": "2026-11-11",
       "title": "The API is live on AWS",
@@ -547,6 +556,10 @@
     {
       "label": "Live prototype",
       "href": "/"
+    },
+    {
+      "label": "Live app (real API)",
+      "href": "https://taskflow-u8sb.vercel.app"
     },
     {
       "label": "API contract",

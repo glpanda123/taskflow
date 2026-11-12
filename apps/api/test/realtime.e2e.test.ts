@@ -3,6 +3,7 @@
  * A browser can't put an Authorization header on a WebSocket, so the client sends
  * { type: 'auth', token } first. Protocol: docs/architecture/03-sequences.md.
  */
+import type { Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
@@ -33,7 +34,7 @@ async function connect(path = '/api/v1/realtime'): Promise<Client> {
   let wake: (() => void) | undefined;
   let isClosed = false;
   socket.on('message', (data) => {
-    inbox.push(JSON.parse(String(data as Buffer)));
+    inbox.push(JSON.parse(Buffer.from(data as Buffer).toString('utf8')));
     wake?.();
   });
   const closed = new Promise<void>((resolve) =>
@@ -72,7 +73,7 @@ async function connect(path = '/api/v1/realtime'): Promise<Client> {
 beforeAll(async () => {
   app = await createApp();
   await app.listen(0); // a real port: WebSocket needs a listening server
-  const { port } = app.getHttpServer().address() as AddressInfo;
+  const { port } = (app.getHttpServer() as Server).address() as AddressInfo;
   url = `ws://127.0.0.1:${port}`;
   prisma = app.get(PrismaService);
 });

@@ -7,6 +7,7 @@ import { ProblemFilter } from './common/problem';
 import { MeController } from './me/me.controller';
 import { PrismaService } from './prisma/prisma.service';
 import { ProjectsController } from './projects/projects.controller';
+import { RealtimeGateway } from './realtime/realtime.gateway';
 import { TaskController } from './tasks/task.controller';
 import { TasksController } from './tasks/tasks.controller';
 import { TasksService } from './tasks/tasks.service';
@@ -26,6 +27,7 @@ import { WorkspacesController } from './workspaces/workspaces.controller';
     AuthService,
     AccessService,
     TasksService,
+    RealtimeGateway,
     { provide: APP_FILTER, useClass: ProblemFilter },
   ],
 })

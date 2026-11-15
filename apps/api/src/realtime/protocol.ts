@@ -5,7 +5,11 @@
  */
 export const REALTIME_PATH = '/api/v1/realtime';
 
+export type Actor = { id: string; name: string };
+
 export type ClientMessage =
   { type: 'auth'; token: string } | { type: 'subscribe'; projectId: string };
 
-export type ServerMessage = { type: 'error'; code: 'unauthorized' | 'not_found' };
+export type ServerMessage =
+  | { type: 'presence'; projectId: string; users: Actor[] }
+  | { type: 'error'; code: 'unauthorized' | 'not_found' };

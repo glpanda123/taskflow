@@ -3,8 +3,6 @@
  * A browser can't put an Authorization header on a WebSocket, so the client sends
  * { type: 'auth', token } first. Protocol: docs/architecture/03-sequences.md.
  */
-import type { Server } from 'node:http';
-import type { AddressInfo } from 'node:net';
 import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -12,69 +10,17 @@ import WebSocket from 'ws';
 import { createApp } from '../src/app';
 import { signAccessToken } from '../src/auth/tokens';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { closeAll, connect as connectTo, listen } from './realtime-client';
 
 let app: INestApplication;
 let prisma: PrismaService;
 let url: string;
 let ly: { id: string; token: string };
-const open: Client[] = [];
-
-/** A test client: collects what the server sends, in order. */
-type Client = {
-  send: (message: unknown) => void;
-  /** The next message from the server, or 'closed' / 'nothing' (after `quietMs`). */
-  next: (quietMs?: number) => Promise<unknown>;
-  closed: Promise<void>;
-  socket: WebSocket;
-};
-
-async function connect(path = '/api/v1/realtime'): Promise<Client> {
-  const socket = new WebSocket(url + path);
-  const inbox: unknown[] = [];
-  let wake: (() => void) | undefined;
-  let isClosed = false;
-  socket.on('message', (data) => {
-    inbox.push(JSON.parse(Buffer.from(data as Buffer).toString('utf8')));
-    wake?.();
-  });
-  const closed = new Promise<void>((resolve) =>
-    socket.on('close', () => {
-      isClosed = true;
-      wake?.();
-      resolve();
-    }),
-  );
-  await new Promise<void>((resolve, reject) => {
-    socket.once('open', resolve);
-    socket.once('error', reject);
-  });
-  const client: Client = {
-    socket,
-    closed,
-    send: (message) => socket.send(typeof message === 'string' ? message : JSON.stringify(message)),
-    next: async (quietMs = 300) => {
-      if (inbox.length === 0 && !isClosed) {
-        await new Promise<void>((resolve) => {
-          const timer = setTimeout(resolve, quietMs);
-          wake = () => {
-            clearTimeout(timer);
-            resolve();
-          };
-        });
-      }
-      if (inbox.length > 0) return inbox.shift();
-      return isClosed ? 'closed' : 'nothing';
-    },
-  };
-  open.push(client);
-  return client;
-}
+const connect = (path?: string) => connectTo(url, path);
 
 beforeAll(async () => {
   app = await createApp();
-  await app.listen(0); // a real port: WebSocket needs a listening server
-  const { port } = (app.getHttpServer() as Server).address() as AddressInfo;
-  url = `ws://127.0.0.1:${port}`;
+  url = await listen(app);
   prisma = app.get(PrismaService);
 });
 
@@ -91,9 +37,7 @@ beforeEach(async () => {
   ly = { id: res.body.user.id as string, token: res.body.accessToken as string };
 });
 
-afterEach(() => {
-  for (const client of open.splice(0)) client.socket.terminate();
-});
+afterEach(closeAll);
 
 describe('connecting', () => {
   it('accepts a WebSocket at /api/v1/realtime', async () => {

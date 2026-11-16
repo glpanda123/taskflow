@@ -13,6 +13,7 @@ import type { MoveTaskRequest, Task, UpdateTaskRequest } from '@taskflow/api-con
 import { AccessService } from '../access/access.service';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { assertBody } from '../common/contract';
+import { TaskEvents } from '../realtime/task-events';
 import { TasksService } from './tasks.service';
 
 /** One task, addressed by its own ID (see the note above /tasks/{taskId} in openapi.yaml). */
@@ -22,6 +23,7 @@ export class TaskController {
   constructor(
     private readonly access: AccessService,
     private readonly tasks: TasksService,
+    private readonly events: TaskEvents,
   ) {}
 
   @Get()
@@ -38,7 +40,9 @@ export class TaskController {
   ): Promise<Task> {
     const { task } = await this.access.requireTask(req.userId, taskId, 'task:update');
     const input = assertBody<UpdateTaskRequest>('UpdateTaskRequest', body);
-    return this.tasks.update(task, input);
+    const updated = await this.tasks.update(task, input);
+    await this.events.taskChanged('updated', updated, req.userId);
+    return updated;
   }
 
   /** A POST action, not a PATCH of `position`: the server computes the key (openapi.yaml). */
@@ -51,6 +55,8 @@ export class TaskController {
   ): Promise<Task> {
     const { task } = await this.access.requireTask(req.userId, taskId, 'task:update');
     const input = assertBody<MoveTaskRequest>('MoveTaskRequest', body);
-    return this.tasks.move(task, input);
+    const moved = await this.tasks.move(task, input);
+    await this.events.taskChanged('moved', moved, req.userId, task.status);
+    return moved;
   }
 }

@@ -49,10 +49,44 @@ to that value. Repositories created after July 2026 use
 
 - **Logs:** EC2 → the instance → Connect → _Session Manager_, then
   `cd /opt/taskflow && sudo docker compose logs -f api`.
+- **Look at the data:** see the next section.
 - **Pause between interviews:** stop the instance (the Elastic IP and disk still cost ~$5/month).
   Start it again and the containers come back on their own.
 - **Remove everything:** delete the stack. The ECR repository must be empty first
   (delete its images in the ECR console).
+
+## Look at the data
+
+Postgres listens on the server's `127.0.0.1:5432` only. A Session Manager port-forwarding
+session carries it to a port on your laptop, through the same SSM channel as the deploys:
+no open port, no SSH.
+
+Once per machine:
+
+1. Install the [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+   and the [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html).
+2. Sign the CLI in with your own AWS user (`aws configure sso`, or `aws configure` with the
+   keys of an IAM user that may start sessions). Region `ap-southeast-1`.
+3. Read the database password on the server (EC2 → the instance → Connect → _Session Manager_):
+   `sudo grep POSTGRES_PASSWORD /opt/taskflow/.env`. Keep it in your password manager.
+
+Each time:
+
+```bash
+aws ssm start-session --region ap-southeast-1 --target <InstanceId> \
+  --document-name AWS-StartPortForwardingSession \
+  --parameters '{"portNumber":["5432"],"localPortNumber":["5433"]}'
+```
+
+Leave it running, then connect any client to `localhost:5433`, database `taskflow`, user
+`taskflow`. From the repository, Prisma Studio needs nothing else:
+
+```bash
+DATABASE_URL="postgresql://taskflow:<password>@localhost:5433/taskflow" \
+  pnpm --filter @taskflow/api exec prisma studio
+```
+
+This is the production database: read freely, change rows through the API.
 
 ## Known limits of the demo profile
 

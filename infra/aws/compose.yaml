@@ -10,6 +10,10 @@ services:
       POSTGRES_USER: taskflow
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: taskflow
+    # Published on the server's loopback only, never on its public address: the way in
+    # from a laptop is an SSM port-forwarding session (see README, "Look at the data").
+    ports:
+      - '127.0.0.1:5432:5432'
     volumes:
       - db-data:/var/lib/postgresql/data
     healthcheck:

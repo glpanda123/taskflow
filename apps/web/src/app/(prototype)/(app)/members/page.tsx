@@ -113,19 +113,23 @@ function InviteForm({
   const projects = useProjects(workspaceId);
   const [role, setRole] = useState<InviteRole>('member');
   const [projectIds, setProjectIds] = useState<string[]>([]);
-  const [sentTo, setSentTo] = useState<string | null>(null);
+  // The link exists only in the response to this request: the server keeps a hash.
+  const [created, setCreated] = useState<{ email: string; link: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const email = String(new FormData(form).get('email')).trim();
-    setSentTo(null);
     invite.mutate(
       // projectIds only for viewers — the API rejects them for other roles (422).
       role === 'viewer' ? { email, role, projectIds } : { email, role },
       {
-        onSuccess: () => {
-          setSentTo(email);
+        onSuccess: (invitation) => {
+          // Replaced only now: if this request fails, the previous link must stay on
+          // screen, because nothing else can show it again.
+          setCreated({ email, link: `${location.origin}/invite/${invitation.token}` });
+          setCopied(false);
           form.reset();
           setProjectIds([]);
         },
@@ -146,13 +150,37 @@ function InviteForm({
       <h2 className="text-section font-semibold">Invite people</h2>
       <form onSubmit={onSubmit} className="space-y-4">
         <FormError message={formError} />
-        {sentTo && (
-          <p
+        {created && (
+          <div
             role="status"
-            className="rounded-control bg-accent px-3 py-2 text-caption text-accent-foreground"
+            className="space-y-2 rounded-control bg-accent px-3 py-3 text-caption text-accent-foreground"
           >
-            Invite sent to {sentTo}.
-          </p>
+            <p>
+              Invitation created for <span className="font-semibold">{created.email}</span>. Send
+              them this link (it is shown only once and works for 7 days):
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                readOnly
+                aria-label="Invitation link"
+                value={created.link}
+                onFocus={(e) => e.currentTarget.select()}
+                className="min-h-touch min-w-0 flex-1 rounded-control border border-input bg-background px-3 font-mono text-caption text-foreground"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(created.link)
+                    .then(() => setCopied(true))
+                    .catch(() => setCopied(false));
+                }}
+              >
+                {copied ? 'Copied' : 'Copy link'}
+              </Button>
+            </div>
+          </div>
         )}
         <Field
           label="Email address"

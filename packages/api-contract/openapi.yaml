@@ -482,10 +482,13 @@ paths:
             schema: { $ref: '#/components/schemas/InviteMemberRequest' }
       responses:
         '201':
-          description: Invitation created and email sent
+          description: |
+            Invitation created. The response carries the invitation `token` once: the web app
+            turns it into a link to pass on. Sending the link by email comes later; then the
+            token will travel by email only.
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/Invitation' }
+              schema: { $ref: '#/components/schemas/InvitationCreated' }
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -499,6 +502,56 @@ paths:
               schema: { $ref: '#/components/schemas/Problem' }
         '422':
           $ref: '#/components/responses/ValidationError'
+
+  # An invitation is addressed by its secret token, not by an ID inside a workspace: the
+  # person holding the link is not a member yet, so there is no workspace to check them against.
+  /invitations/{token}:
+    parameters:
+      - $ref: '#/components/parameters/InvitationToken'
+    get:
+      tags: [Members]
+      operationId: getInvitation
+      summary: What an invitation link is for (no login needed)
+      description: |
+        Lets the invite page say "you were invited to X as Y" before the person has an account.
+        An unknown, expired or already used token is `404`.
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvitationPreview' }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /invitations/{token}/accept:
+    parameters:
+      - $ref: '#/components/parameters/InvitationToken'
+    post:
+      tags: [Members]
+      operationId: acceptInvitation
+      summary: Join the workspace an invitation is for
+      description: |
+        The caller's email must be the invited email (`403` otherwise). The invitation can be
+        used once; afterwards the token is `404`.
+      responses:
+        '200':
+          description: Joined
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WorkspaceMembership' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Already a member of this workspace
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
 components:
   securitySchemes:
@@ -519,6 +572,11 @@ components:
       in: path
       required: true
       schema: { type: string, format: uuid }
+    InvitationToken:
+      name: token
+      in: path
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 200 }
     ProjectId:
       name: projectId
       in: path
@@ -953,6 +1011,23 @@ components:
         projectIds:
           type: [array, 'null']
           items: { type: string, format: uuid }
+        expiresAt: { type: string, format: date-time }
+    InvitationCreated:
+      allOf:
+        - $ref: '#/components/schemas/Invitation'
+        - type: object
+          required: [token]
+          properties:
+            token:
+              type: string
+              description: Shown once. Only its hash is stored.
+    InvitationPreview:
+      type: object
+      required: [workspaceName, email, role, expiresAt]
+      properties:
+        workspaceName: { type: string }
+        email: { type: string, format: email }
+        role: { $ref: '#/components/schemas/Role' }
         expiresAt: { type: string, format: date-time }
     InviteMemberRequest:
       type: object

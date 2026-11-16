@@ -11,6 +11,8 @@
  * | project:read     | allow | allow | allow  | allow if invited, else 404   | not-found    |
  * | task:create      | allow | allow | allow  | 403 if invited, else 404     | not-found    |
  * | task:update      | allow | allow | allow  | 403 if invited, else 404     | not-found    |
+ * | member:list      | allow | allow | allow  | allow                        | not-found    |
+ * | member:invite    | allow | allow | 403    | 403                          | not-found    |
  *
  * Why two different "no" answers:
  * - 403 forbidden: you are inside the workspace and can see the thing, but your role
@@ -21,7 +23,13 @@
 import type { Role } from '@prisma/client';
 
 export type Action =
-  'project:list' | 'project:create' | 'project:read' | 'task:create' | 'task:update';
+  | 'project:list'
+  | 'project:create'
+  | 'project:read'
+  | 'task:create'
+  | 'task:update'
+  | 'member:list'
+  | 'member:invite';
 
 export type Decision = 'allow' | 'forbidden' | 'not-found';
 
@@ -41,7 +49,11 @@ export function decide(action: Action, facts: Facts): Decision {
       // Every member may list; viewers get a filtered list (done in the query).
       return 'allow';
 
+    case 'member:list':
+      return 'allow';
+
     case 'project:create':
+    case 'member:invite':
       return facts.role === 'owner' || facts.role === 'admin' ? 'allow' : 'forbidden';
 
     case 'project:read':

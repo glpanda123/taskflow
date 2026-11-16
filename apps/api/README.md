@@ -37,15 +37,16 @@ NEXT_PUBLIC_API_MOCKING=disabled API_URL=http://localhost:3001 \\
 Or put the variables in `apps/web/.env.local` (see `apps/web/.env.example`). The WebSocket
 is not forwarded by Next on Vercel, so `NEXT_PUBLIC_REALTIME_URL` points the browser
 straight at the API (in production: `wss://<api host>`). Screens whose endpoint the API
-doesn't have yet (Today, Members, Activity, AI drafts) show "Coming soon" instead of data.
+doesn't have yet (Today, Activity, AI drafts) show "Coming soon" instead of data.
 
 ## What exists so far
 
-| Area       | Endpoints                                                                                                  |
-| ---------- | ---------------------------------------------------------------------------------------------------------- |
-| Auth       | `POST /api/v1/auth/register`, `login`, `refresh` (rotation + reuse detection), `logout`                    |
-| Me         | `GET /api/v1/me`                                                                                           |
-| Workspaces | `POST /api/v1/workspaces`                                                                                  |
-| Projects   | `GET`/`POST /api/v1/workspaces/{id}/projects`                                                              |
-| Tasks      | `GET`/`POST /api/v1/projects/{id}/tasks`, `GET`/`PATCH /api/v1/tasks/{id}`, `POST /api/v1/tasks/{id}/move` |
-| Realtime   | WebSocket `/api/v1/realtime`: `auth`, `subscribe` → `presence`, `task.changed` (one instance, in memory)   |
+| Area       | Endpoints                                                                                                                                                       |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth       | `POST /api/v1/auth/register`, `login`, `refresh` (rotation + reuse detection), `logout`                                                                         |
+| Me         | `GET /api/v1/me`                                                                                                                                                |
+| Workspaces | `POST /api/v1/workspaces`                                                                                                                                       |
+| Projects   | `GET`/`POST /api/v1/workspaces/{id}/projects`                                                                                                                   |
+| Tasks      | `GET`/`POST /api/v1/projects/{id}/tasks`, `GET`/`PATCH /api/v1/tasks/{id}`, `POST /api/v1/tasks/{id}/move`                                                      |
+| Members    | `GET /api/v1/workspaces/{id}/members`, `POST /api/v1/workspaces/{id}/invitations`, `GET /api/v1/invitations/{token}`, `POST /api/v1/invitations/{token}/accept` |
+| Realtime   | WebSocket `/api/v1/realtime`: `auth`, `subscribe` → `presence`, `task.changed` (one instance, in memory)                                                        |

@@ -45,6 +45,10 @@ export const versionConflict = (sentVersion: number, current: { version: number 
     { current },
   );
 
+/** 409 for a write that collides with what is already there (not a stale `version`). */
+export const conflict = (kind: string, detail: string) =>
+  new ProblemException(409, kind, 'Conflict', detail);
+
 export const validationFailed = (errors: FieldError[]) =>
   new ProblemException(422, 'validation-error', 'Invalid request', undefined, { errors });
 

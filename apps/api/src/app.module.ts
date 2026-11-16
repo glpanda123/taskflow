@@ -5,6 +5,9 @@ import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { ProblemFilter } from './common/problem';
 import { MeController } from './me/me.controller';
+import { InvitationsController } from './members/invitations.controller';
+import { MembersController } from './members/members.controller';
+import { MembersService } from './members/members.service';
 import { PrismaService } from './prisma/prisma.service';
 import { ProjectsController } from './projects/projects.controller';
 import { RealtimeGateway } from './realtime/realtime.gateway';
@@ -23,12 +26,15 @@ import { WorkspacesController } from './workspaces/workspaces.controller';
     ProjectsController,
     TasksController,
     TaskController,
+    MembersController,
+    InvitationsController,
   ],
   providers: [
     PrismaService,
     AuthService,
     AccessService,
     TasksService,
+    MembersService,
     RealtimeHub,
     TaskEvents,
     RealtimeGateway,

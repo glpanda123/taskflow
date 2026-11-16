@@ -9,6 +9,7 @@ import { Button, FormError } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { ApiError, errorMessage, fieldErrors } from '@/lib/api/errors';
 import { useAuth } from '@/lib/auth/session';
+import { pendingInvite, usePendingInvite } from '@/lib/invite/pending';
 
 /** Must match `RegisterRequest.password.minLength` in openapi.yaml. */
 const MIN_PASSWORD = 8;
@@ -16,10 +17,15 @@ const MIN_PASSWORD = 8;
 export function SignupForm() {
   const { register } = useAuth();
   const router = useRouter();
+  const invite = usePendingInvite();
 
   const submit = useMutation({
     mutationFn: (body: RegisterRequest) => register(body),
-    onSuccess: () => router.push('/onboarding/workspace'),
+    onSuccess: () => {
+      // Invited people join an existing workspace: no need to create their own first.
+      const invite = pendingInvite();
+      router.push(invite ? `/invite/${invite.token}` : '/onboarding/workspace');
+    },
   });
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -44,6 +50,10 @@ export function SignupForm() {
       <FormError message={formError} />
       <Field label="Your name" name="name" autoComplete="name" required error={fields.name} />
       <Field
+        // Remount when the invitation is read, so the invited email becomes the default.
+        key={invite?.email ?? 'no-invite'}
+        defaultValue={invite?.email}
+        hint={invite ? 'The invitation was sent to this address.' : undefined}
         label="Work email"
         name="email"
         type="email"

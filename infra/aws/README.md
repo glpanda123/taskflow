@@ -59,4 +59,5 @@ to that value. Repositories created after July 2026 use
 - One server, one availability zone: a reboot is downtime.
 - Postgres lives on the instance disk with no automated backups yet. Next step: a nightly
   `pg_dump` to S3, or EBS snapshots through Data Lifecycle Manager.
-- No Redis yet; realtime adds a `redis` service to `compose.yaml`.
+- Realtime works because there is one API instance: who watches which board is kept in its
+  memory. Redis pub/sub and the outbox come next, as a `redis` service in `compose.yaml`.

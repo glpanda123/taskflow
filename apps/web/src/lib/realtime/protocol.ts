@@ -5,7 +5,8 @@
  * access token as the first message. It then subscribes to the project it is looking
  * at; the server only accepts projects the user can see (same rule as the REST API).
  *
- * Stage 3 turns this into a proper spec (AsyncAPI) next to the OpenAPI contract.
+ * The server's copy of these types is apps/api/src/realtime/protocol.ts; the spec is
+ * docs/architecture/03-sequences.md ("Realtime messages").
  */
 import type { Task, TaskStatus } from '@taskflow/api-contract';
 
@@ -19,7 +20,7 @@ export type ServerMessage =
   | {
       type: 'task.changed';
       projectId: string;
-      change: 'moved' | 'created';
+      change: 'created' | 'updated' | 'moved';
       task: Task;
       actor: Actor;
       /** Status before a move. */

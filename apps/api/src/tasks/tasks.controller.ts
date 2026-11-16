@@ -16,6 +16,7 @@ import type { Response } from 'express';
 import { AccessService } from '../access/access.service';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 import { assertBody } from '../common/contract';
+import { TaskEvents } from '../realtime/task-events';
 import { isUuid } from '../common/input';
 import { validationFailed } from '../common/problem';
 import { TasksService } from './tasks.service';
@@ -58,6 +59,7 @@ export class TasksController {
   constructor(
     private readonly access: AccessService,
     private readonly tasks: TasksService,
+    private readonly events: TaskEvents,
   ) {}
 
   @Get()
@@ -81,6 +83,7 @@ export class TasksController {
     const { project } = await this.access.requireProject(req.userId, projectId, 'task:create');
     const input = assertBody<CreateTaskRequest>('CreateTaskRequest', body);
     const task = await this.tasks.create(project, req.userId, input);
+    await this.events.taskChanged('created', task, req.userId);
     res.location(`/api/v1/tasks/${task.id}`);
     return task;
   }

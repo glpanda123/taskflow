@@ -158,7 +158,9 @@ export function putTaskInCache(qc: QueryClient, task: Task) {
   qc.setQueriesData<TaskPage>({ queryKey: qk.allTasksOf(task.projectId) }, (page) => {
     if (!page) return page;
     const items = page.items.some((t) => t.id === task.id)
-      ? page.items.map((t) => (t.id === task.id ? task : t))
+      ? // Never replace a newer version with an older one: a realtime event and an HTTP
+        // response for the same task can arrive in either order.
+        page.items.map((t) => (t.id === task.id && t.version <= task.version ? task : t))
       : [...page.items, task];
     return { ...page, items: items.sort(byBoardOrder) };
   });

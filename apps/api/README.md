@@ -30,12 +30,14 @@ works and no CORS is needed.
 ```bash
 pnpm --filter @taskflow/api dev                     # terminal 1
 cd apps/web
-NEXT_PUBLIC_API_MOCKING=disabled API_URL=http://localhost:3001 pnpm dev   # terminal 2
+NEXT_PUBLIC_API_MOCKING=disabled API_URL=http://localhost:3001 \\
+  NEXT_PUBLIC_REALTIME_URL=ws://localhost:3001 pnpm dev                    # terminal 2
 ```
 
-Or put both variables in `apps/web/.env.local` (see `apps/web/.env.example`). Screens whose
-endpoint the API doesn't have yet (Today, Members, Activity, AI drafts, realtime) show
-"Coming soon" instead of data.
+Or put the variables in `apps/web/.env.local` (see `apps/web/.env.example`). The WebSocket
+is not forwarded by Next on Vercel, so `NEXT_PUBLIC_REALTIME_URL` points the browser
+straight at the API (in production: `wss://<api host>`). Screens whose endpoint the API
+doesn't have yet (Today, Members, Activity, AI drafts) show "Coming soon" instead of data.
 
 ## What exists so far
 
@@ -46,3 +48,4 @@ endpoint the API doesn't have yet (Today, Members, Activity, AI drafts, realtime
 | Workspaces | `POST /api/v1/workspaces`                                                                                  |
 | Projects   | `GET`/`POST /api/v1/workspaces/{id}/projects`                                                              |
 | Tasks      | `GET`/`POST /api/v1/projects/{id}/tasks`, `GET`/`PATCH /api/v1/tasks/{id}`, `POST /api/v1/tasks/{id}/move` |
+| Realtime   | WebSocket `/api/v1/realtime`: `auth`, `subscribe` → `presence`, `task.changed` (one instance, in memory)   |

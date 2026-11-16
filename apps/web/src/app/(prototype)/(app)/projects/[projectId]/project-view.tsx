@@ -74,7 +74,7 @@ export function ProjectView() {
         <Avatar name={event.actor.name} />
         <span>
           <span className="font-semibold">{first}</span>{' '}
-          {event.change === 'created' ? 'added' : 'moved'}{' '}
+          {{ created: 'added', updated: 'updated', moved: 'moved' }[event.change]}{' '}
           <span className="font-medium">{event.task.title}</span>
           {event.change === 'moved' ? ` to ${statusLabel[event.task.status]}` : ''}
           <span className="mt-0.5 flex items-center gap-1 text-muted-foreground">

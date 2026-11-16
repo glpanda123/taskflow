@@ -1,12 +1,12 @@
 {
-  "updatedAt": "2026-11-12",
+  "updatedAt": "2026-11-16",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-12",
+    "date": "2026-11-16",
     "focus": "Stage 4 — the backend, test first",
     "items": [
       {
@@ -54,7 +54,11 @@
         "done": true
       },
       {
-        "label": "Realtime: WebSocket gateway",
+        "label": "Realtime, part 1: WebSocket gateway, presence, live task changes (one instance)",
+        "done": true
+      },
+      {
+        "label": "Realtime, part 2: Redis pub/sub and the outbox",
         "done": false
       }
     ]
@@ -396,23 +400,23 @@
     },
     {
       "date": "2026-11-13",
-      "status": "planned",
-      "summary": "Realtime: WebSocket"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-14",
-      "status": "planned",
-      "summary": "Members and email invitations"
+      "status": "rest",
+      "summary": "No session"
     },
     {
       "date": "2026-11-15",
-      "status": "planned",
-      "summary": "Today, activity log, rate limit, cache"
+      "status": "shipped",
+      "summary": "Realtime: subscribe and presence"
     },
     {
       "date": "2026-11-16",
-      "status": "planned",
-      "summary": "AI drafts on a real LLM"
+      "status": "shipped",
+      "summary": "Realtime live: task changes reach other people's boards"
     },
     {
       "date": "2026-11-17",
@@ -446,6 +450,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-16",
+      "title": "Realtime, part 1: two people, one board",
+      "body": "A WebSocket gateway on the API: the browser authenticates with its access token in the first message, subscribes to one project under the same rule as reading it over REST, and gets presence and every committed task change. Who watches which board lives in the memory of the one API instance; Redis pub/sub and the outbox come next. Built test first: 25 tests over a real socket and a real Postgres. The review bot caught a real regression: with live updates, the edit form saved a stale draft against the newest version and silently overwrote the other person's change. The form now saves against the version the edit started from, so the 409 prompt appears again. Vercel does not forward WebSockets, so the web app connects straight to the API."
+    },
     {
       "date": "2026-11-12",
       "title": "The web app runs on the production API",

@@ -14,8 +14,7 @@ sed -i '/^API_IMAGE=/d' .env
 echo "API_IMAGE=$image" >> .env
 
 docker compose pull api
-# --remove-orphans: stops the Postgres container of the earlier setup (its volume stays).
-docker compose up -d --no-deps --remove-orphans caddy
+docker compose up -d --no-deps caddy
 # A changed Caddyfile is not a Compose change, so tell the running Caddy to reload it.
 reloaded=no
 for _ in $(seq 1 10); do
@@ -36,6 +35,10 @@ for _ in $(seq 1 30); do
     "fetch('http://localhost:3001/api/v1/me').then(r=>console.log(r.status)).catch(()=>console.log(0))")"
   if [ "$code" = "401" ]; then
     echo "API is up: $image"
+    # Only now remove containers that left compose.yaml (the Postgres container of the
+    # earlier setup; its volume stays). Before this point a failed deploy must leave
+    # the previous API with everything it needs.
+    docker compose up -d --no-deps --remove-orphans caddy
     docker image prune -af --filter "until=168h" >/dev/null || true
     exit 0
   fi

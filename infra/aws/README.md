@@ -81,8 +81,14 @@ to that value. Repositories created after July 2026 use
 
 ## Moving an existing server from the Postgres container to Neon
 
-Before 2026-11-16 Postgres ran as a container on the instance. To move: do step 4 above,
-then merge or run the deploy. `deploy.sh` stops the old `db` container; its data stays in
-the Docker volume `taskflow_db-data` until you remove it (`sudo docker volume rm taskflow_db-data`).
-If the two variables are missing, the deploy stops before changing anything and the old
-containers keep running.
+Before 2026-11-16 Postgres ran as a container on the instance.
+
+**This move is a reset:** the Neon database starts empty, and existing accounts, boards and
+invitations are not copied. That was the intent here (the server held test data only). To keep
+data, load a `pg_dump` of the old database into Neon before deploying.
+
+To move: do step 4 above, then merge or run the deploy. Until the new API answers, the old
+containers are left alone: if the two variables are missing, the addresses are wrong or a
+migration fails, the deploy stops and the previous API keeps running on the old database.
+After a healthy start, `deploy.sh` removes the old `db` container; its data stays in the
+Docker volume `taskflow_db-data` until you remove it (`sudo docker volume rm taskflow_db-data`).

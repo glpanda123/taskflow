@@ -58,7 +58,11 @@
         "done": true
       },
       {
-        "label": "Realtime, part 2: Redis pub/sub and the outbox",
+        "label": "Members: list, invite by link, accept an invitation",
+        "done": true
+      },
+      {
+        "label": "Realtime, part 2: Redis pub/sub and the outbox (after Dec 12)",
         "done": false
       }
     ]
@@ -416,40 +420,45 @@
     {
       "date": "2026-11-16",
       "status": "shipped",
-      "summary": "Realtime live: task changes reach other people's boards"
+      "summary": "Realtime live on the board; members and invitations by link"
     },
     {
       "date": "2026-11-17",
       "status": "planned",
-      "summary": "AI: validation, retries, rate limit"
+      "summary": "AI: real Claude call, tool use, structured output"
     },
     {
       "date": "2026-11-18",
       "status": "planned",
-      "summary": "AI: evals in CI"
+      "summary": "AI: schema validation, retries, timeout, rate limit"
     },
     {
       "date": "2026-11-19",
       "status": "planned",
-      "summary": "MCP server"
+      "summary": "AI: evals in CI"
     },
     {
       "date": "2026-11-20",
       "status": "planned",
-      "summary": "MCP server (continued)"
+      "summary": "MCP server"
     },
     {
       "date": "2026-11-21",
       "status": "planned",
-      "summary": "Claude Code skills, hooks, subagents"
+      "summary": "MCP server (continued); Claude Code skills, hooks, subagents"
     },
     {
       "date": "2026-11-22",
       "status": "planned",
-      "summary": "Wrap-up: README, demo video"
+      "summary": "Buffer, README, status page"
     }
   ],
   "log": [
+    {
+      "date": "2026-11-16",
+      "title": "Members and invitations by link",
+      "body": "An owner or admin invites someone by email and gets a link to send them (real invitation emails come later). The link is shown once: the server keeps only a SHA-256 hash of the token, and it works for 7 days. Opening it shows which workspace and role, without logging in; joining requires an account with the invited email, so a forwarded link does not let someone else in. Two people accepting at the same moment cannot both win: the invitation is claimed with one conditional update. The design had a gap here, the v1 contract could create an invitation but had no way to accept one, so the accept flow was added to the contract first. 20 new tests against a real Postgres."
+    },
     {
       "date": "2026-11-16",
       "title": "Realtime, part 1: two people, one board",

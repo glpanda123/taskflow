@@ -26,6 +26,7 @@ export const qk = {
   projects: (workspaceId: string) => ['workspaces', workspaceId, 'projects'] as const,
   today: (workspaceId: string) => ['workspaces', workspaceId, 'today'] as const,
   members: (workspaceId: string) => ['workspaces', workspaceId, 'members'] as const,
+  invitation: (token: string) => ['invitations', token] as const,
   tasks: (projectId: string, status?: TaskStatus[]) =>
     ['projects', projectId, 'tasks', { status: status ?? 'all' }] as const,
   allTasksOf: (projectId: string) => ['projects', projectId, 'tasks'] as const,
@@ -41,13 +42,34 @@ export function useMe(enabled = true) {
   return useQuery({ ...meQuery, enabled });
 }
 
+const WORKSPACE_KEY = 'taskflow.workspace';
+
+function preferredWorkspaceId(): string | null {
+  try {
+    return localStorage.getItem(WORKSPACE_KEY);
+  } catch {
+    return null; // server render, or storage blocked
+  }
+}
+
+/** Makes `workspaceId` the workspace the app opens in (if the user is a member). */
+export function preferWorkspace(workspaceId: string) {
+  try {
+    localStorage.setItem(WORKSPACE_KEY, workspaceId);
+  } catch {
+    // Without storage the app opens the first workspace.
+  }
+}
+
 /**
  * The workspace the user is working in, with their role in it.
- * v1 has one workspace per user in practice; a switcher comes later.
+ * There is no switcher yet: it is the workspace the user joined last through an
+ * invitation in this browser, otherwise their first one.
  */
 export function useCurrentWorkspace() {
   const me = useMe();
-  const membership = me.data?.workspaces[0];
+  const preferred = preferredWorkspaceId();
+  const membership = me.data?.workspaces.find((w) => w.id === preferred) ?? me.data?.workspaces[0];
   return {
     ...me,
     workspace: membership,
@@ -245,5 +267,24 @@ export function useInviteMember(workspaceId: string) {
         }),
       ),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.members(workspaceId) }),
+  });
+}
+
+/** What an invitation link is for. Works without a login; an invalid link is a 404. */
+export function useInvitation(token: string) {
+  return useQuery({
+    queryKey: qk.invitation(token),
+    queryFn: () => unwrap(api.GET('/invitations/{token}', { params: { path: { token } } })),
+    retry: false,
+  });
+}
+
+export function useAcceptInvitation(token: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      unwrap(api.POST('/invitations/{token}/accept', { params: { path: { token } } })),
+    // `me.workspaces` gained one: guards and the workspace switcher must see it.
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.me }),
   });
 }

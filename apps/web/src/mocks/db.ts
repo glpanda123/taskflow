@@ -37,7 +37,7 @@ export type Db = {
   memberships: Map<string, Membership[]>; // by workspaceId
   projects: Project[];
   tasks: Task[];
-  invitations: (Invitation & { workspaceId: string })[];
+  invitations: (Invitation & { workspaceId: string; token: string })[];
   activity: ActivityEvent[];
   sessions: Map<string, string>; // access token → userId
 };

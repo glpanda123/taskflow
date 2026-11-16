@@ -10,6 +10,7 @@ import { ApiError, errorMessage, fieldErrors } from '@/lib/api/errors';
 import { meQuery } from '@/lib/api/queries';
 import { useAuth } from '@/lib/auth/session';
 import { demoAccount } from '@/lib/demo';
+import { pendingInvite } from '@/lib/invite/pending';
 
 export function LoginForm() {
   const { login } = useAuth();
@@ -22,7 +23,12 @@ export function LoginForm() {
       // Where to go depends on whether this user already has a workspace.
       return queryClient.fetchQuery(meQuery);
     },
-    onSuccess: (me) => router.push(me.workspaces.length > 0 ? '/today' : '/onboarding/workspace'),
+    onSuccess: (me) => {
+      // Someone who came from an invitation link goes back to it, not to onboarding.
+      const invite = pendingInvite();
+      if (invite) return router.push(`/invite/${invite.token}`);
+      router.push(me.workspaces.length > 0 ? '/today' : '/onboarding/workspace');
+    },
   });
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {

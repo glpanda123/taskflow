@@ -322,6 +322,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/invitations/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: components["parameters"]["InvitationToken"];
+            };
+            cookie?: never;
+        };
+        /**
+         * What an invitation link is for (no login needed)
+         * @description Lets the invite page say "you were invited to X as Y" before the person has an account.
+         *     An unknown, expired or already used token is `404`.
+         */
+        get: operations["getInvitation"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/invitations/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: components["parameters"]["InvitationToken"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join the workspace an invitation is for
+         * @description The caller's email must be the invited email (`403` otherwise). The invitation can be
+         *     used once; afterwards the token is `404`.
+         */
+        post: operations["acceptInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -575,6 +621,18 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        InvitationCreated: components["schemas"]["Invitation"] & {
+            /** @description Shown once. Only its hash is stored. */
+            token: string;
+        };
+        InvitationPreview: {
+            workspaceName: string;
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["Role"];
+            /** Format: date-time */
+            expiresAt: string;
+        };
         InviteMemberRequest: {
             /** Format: email */
             email: string;
@@ -662,6 +720,7 @@ export interface components {
     };
     parameters: {
         WorkspaceId: string;
+        InvitationToken: string;
         ProjectId: string;
         TaskId: string;
         /** @description Opaque value from a previous page's `nextCursor`. Omit for the first page. */
@@ -703,6 +762,8 @@ export type DraftTasksResponse = components['schemas']['DraftTasksResponse'];
 export type TodayOverview = components['schemas']['TodayOverview'];
 export type Member = components['schemas']['Member'];
 export type Invitation = components['schemas']['Invitation'];
+export type InvitationCreated = components['schemas']['InvitationCreated'];
+export type InvitationPreview = components['schemas']['InvitationPreview'];
 export type InviteMemberRequest = components['schemas']['InviteMemberRequest'];
 export type ResponseSessionCreated = components['responses']['SessionCreated'];
 export type ResponseUnauthorized = components['responses']['Unauthorized'];
@@ -712,6 +773,7 @@ export type ResponseValidationError = components['responses']['ValidationError']
 export type ResponseRateLimited = components['responses']['RateLimited'];
 export type ResponseVersionConflict = components['responses']['VersionConflict'];
 export type ParameterWorkspaceId = components['parameters']['WorkspaceId'];
+export type ParameterInvitationToken = components['parameters']['InvitationToken'];
 export type ParameterProjectId = components['parameters']['ProjectId'];
 export type ParameterTaskId = components['parameters']['TaskId'];
 export type ParameterCursor = components['parameters']['Cursor'];
@@ -1178,13 +1240,17 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Invitation created and email sent */
+            /**
+             * @description Invitation created. The response carries the invitation `token` once: the web app
+             *     turns it into a link to pass on. Sending the link by email comes later; then the
+             *     token will travel by email only.
+             */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Invitation"];
+                    "application/json": components["schemas"]["InvitationCreated"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -1200,6 +1266,63 @@ export interface operations {
                 };
             };
             422: components["responses"]["ValidationError"];
+        };
+    };
+    getInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: components["parameters"]["InvitationToken"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPreview"];
+                };
+            };
+            404: components["responses"]["NotFound"];
+        };
+    };
+    acceptInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: components["parameters"]["InvitationToken"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Joined */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceMembership"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            /** @description Already a member of this workspace */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
         };
     };
 }

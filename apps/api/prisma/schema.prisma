@@ -2,6 +2,7 @@
 // Session 1 (auth): users, refresh tokens, and the workspace tables /me reads.
 // Session 2 (RBAC): projects and project_viewers.
 // Session 3 (tasks): tasks.
+// Session 4 (members): invitations.
 
 generator client {
   provider = "prisma-client-js"
@@ -41,11 +42,12 @@ model User {
   avatarUrl    String?  @map("avatar_url")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  refreshTokens  RefreshToken[]
-  memberships    Membership[]
-  projectViewers ProjectViewer[]
-  assignedTasks  Task[]          @relation("assignee")
-  createdTasks   Task[]          @relation("creator")
+  refreshTokens   RefreshToken[]
+  memberships     Membership[]
+  projectViewers  ProjectViewer[]
+  assignedTasks   Task[]          @relation("assignee")
+  createdTasks    Task[]          @relation("creator")
+  sentInvitations Invitation[]
 
   @@map("users")
 }
@@ -74,6 +76,7 @@ model Workspace {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   memberships Membership[]
+  invitations Invitation[]
   projects    Project[]
   tasks       Task[]
 
@@ -91,6 +94,30 @@ model Membership {
 
   @@id([workspaceId, userId])
   @@map("memberships")
+}
+
+/// An invitation to join a workspace. The link carries a random token; only its SHA-256
+/// hash is stored, so a leaked database can't be used to join.
+/// "One pending invitation per email" is a partial unique index added in the migration:
+/// (workspace_id, email) WHERE accepted_at IS NULL.
+model Invitation {
+  id          String    @id @default(uuid()) @db.Uuid
+  workspaceId String    @map("workspace_id") @db.Uuid
+  email       String    @db.Citext
+  role        Role
+  /// Viewers only: the projects they will be able to see.
+  projectIds  String[]  @map("project_ids") @db.Uuid
+  tokenHash   String    @unique @map("token_hash")
+  invitedById String    @map("invited_by") @db.Uuid
+  expiresAt   DateTime  @map("expires_at") @db.Timestamptz
+  acceptedAt  DateTime? @map("accepted_at") @db.Timestamptz
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation(fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+  @@map("invitations")
 }
 
 model Project {

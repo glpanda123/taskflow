@@ -15,6 +15,8 @@ import {
   validationProblem,
 } from '../http';
 
+let invitationsCreated = 0;
+
 export const memberHandlers = [
   http.get('/workspaces/{workspaceId}/members', ({ params, request, response }) => {
     const caller = authenticate(request);
@@ -33,7 +35,7 @@ export const memberHandlers = [
     });
     const invitations: Invitation[] = db.invitations
       .filter((i) => i.workspaceId === params.workspaceId)
-      .map(({ workspaceId: _w, ...invitation }) => invitation);
+      .map(({ workspaceId: _w, token: _t, ...invitation }) => invitation);
     return response(200).json({ members, invitations });
   }),
 
@@ -73,13 +75,54 @@ export const memberHandlers = [
       return response(409).json(problem(409, 'already-member', 'Already a member or invited'));
 
     const invitation = {
-      id: mockId(800 + db.invitations.length),
+      // A counter, not the list length: accepted invitations are removed, and a reused
+      // id would give two invitations the same token.
+      id: mockId(900 + invitationsCreated++),
       email: body.email,
       role: body.role,
       projectIds: body.projectIds ?? null,
       expiresAt: new Date(Date.now() + 7 * 86_400_000).toISOString(),
     };
-    db.invitations.push({ ...invitation, workspaceId: params.workspaceId });
-    return response(201).json(invitation);
+    // The real server returns a random token once and stores only its hash.
+    const token = `mock-invite-${invitation.id}`;
+    db.invitations.push({ ...invitation, workspaceId: params.workspaceId, token });
+    return response(201).json({ ...invitation, token });
+  }),
+
+  http.get('/invitations/{token}', ({ params, response }) => {
+    const invitation = db.invitations.find((i) => i.token === params.token);
+    const workspace = db.workspaces.find((w) => w.id === invitation?.workspaceId);
+    if (!invitation || !workspace) return response(404).json(notFound('Invitation'));
+    return response(200).json({
+      workspaceName: workspace.name,
+      email: invitation.email,
+      role: invitation.role,
+      expiresAt: invitation.expiresAt,
+    });
+  }),
+
+  http.post('/invitations/{token}/accept', ({ params, request, response }) => {
+    const caller = authenticate(request);
+    if (!caller) return response(401).json(unauthorized());
+    const invitation = db.invitations.find((i) => i.token === params.token);
+    const workspace = db.workspaces.find((w) => w.id === invitation?.workspaceId);
+    if (!invitation || !workspace) return response(404).json(notFound('Invitation'));
+    const user = db.users.find((u) => u.id === caller.userId);
+    if (user?.email.toLowerCase() !== invitation.email.toLowerCase()) {
+      return response(403).json(forbidden('This invitation is for another email address.'));
+    }
+    if (membershipOf(caller.userId, workspace.id)) {
+      return response(409).json(problem(409, 'already-member', 'Already a member'));
+    }
+    const members = db.memberships.get(workspace.id) ?? [];
+    members.push({
+      userId: caller.userId,
+      role: invitation.role,
+      projectIds: invitation.projectIds,
+      joinedAt: new Date().toISOString(),
+    });
+    db.memberships.set(workspace.id, members);
+    db.invitations = db.invitations.filter((i) => i !== invitation);
+    return response(200).json({ ...workspace, role: invitation.role });
   }),
 ];

@@ -47,6 +47,21 @@ const cases: [Action, Facts, Decision][] = [
   ['task:update', { role: 'viewer', invitedToProject: true }, 'forbidden'],
   ['task:update', { role: 'viewer', invitedToProject: false }, 'not-found'],
   ['task:update', { role: null }, 'not-found'],
+
+  // member:list: everyone in the workspace sees who else is in it
+  ['member:list', { role: 'owner' }, 'allow'],
+  ['member:list', { role: 'admin' }, 'allow'],
+  ['member:list', { role: 'member' }, 'allow'],
+  ['member:list', { role: 'viewer' }, 'allow'],
+  ['member:list', { role: null }, 'not-found'],
+
+  // member:invite: owner and admin only ("only an owner invites an admin" depends on
+  // the invited role, so it lives in the service, not in this table)
+  ['member:invite', { role: 'owner' }, 'allow'],
+  ['member:invite', { role: 'admin' }, 'allow'],
+  ['member:invite', { role: 'member' }, 'forbidden'],
+  ['member:invite', { role: 'viewer' }, 'forbidden'],
+  ['member:invite', { role: null }, 'not-found'],
 ];
 
 describe('decide()', () => {

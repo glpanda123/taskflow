@@ -89,6 +89,19 @@ function EditableTask({ task }: { task: Task }) {
   const update = useUpdateTask(task.projectId);
   const move = useMoveTask(task.projectId);
   const [draft, setDraft] = useState<Draft>({});
+  // The version the task had when this edit began. Saving sends THIS version, not the
+  // latest one: a realtime update can move `task.version` forward while the form is
+  // dirty, and saving with the newer number would overwrite the other person's change
+  // without the 409 that asks the user what to do.
+  const [baseVersion, setBaseVersion] = useState<number | null>(null);
+  const edit = (change: Draft) => {
+    setBaseVersion((v) => v ?? task.version);
+    setDraft((d) => ({ ...d, ...change }));
+  };
+  const clearDraft = () => {
+    setDraft({});
+    setBaseVersion(null);
+  };
   const [conflict, setConflict] = useState<Task | null>(null);
 
   const value = {
@@ -106,7 +119,7 @@ function EditableTask({ task }: { task: Task }) {
       { taskId: task.id, version, ...draft },
       {
         onSuccess: () => {
-          setDraft({});
+          clearDraft();
           setConflict(null);
         },
         onError: (error) => {
@@ -126,7 +139,7 @@ function EditableTask({ task }: { task: Task }) {
       className="space-y-4"
       onSubmit={(e) => {
         e.preventDefault();
-        save(task.version);
+        save(baseVersion ?? task.version);
       }}
     >
       {conflict && (
@@ -148,7 +161,7 @@ function EditableTask({ task }: { task: Task }) {
               type="button"
               variant="secondary"
               onClick={() => {
-                setDraft({});
+                clearDraft();
                 setConflict(null);
                 update.reset();
               }}
@@ -169,7 +182,7 @@ function EditableTask({ task }: { task: Task }) {
           required
           maxLength={200}
           value={value.title}
-          onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+          onChange={(e) => edit({ title: e.target.value })}
           aria-invalid={fields.title ? true : undefined}
           className="block min-h-touch w-full rounded-control border border-input px-3 text-section font-semibold"
         />
@@ -211,7 +224,7 @@ function EditableTask({ task }: { task: Task }) {
           <select
             id="task-priority"
             value={value.priority}
-            onChange={(e) => setDraft((d) => ({ ...d, priority: e.target.value as Priority }))}
+            onChange={(e) => edit({ priority: e.target.value as Priority })}
             className="block min-h-touch w-full rounded-control border border-input bg-card px-2"
           >
             {priorityValues.map((p) => (
@@ -229,7 +242,7 @@ function EditableTask({ task }: { task: Task }) {
           <select
             id="task-assignee"
             value={value.assigneeId ?? ''}
-            onChange={(e) => setDraft((d) => ({ ...d, assigneeId: e.target.value || null }))}
+            onChange={(e) => edit({ assigneeId: e.target.value || null })}
             className="block min-h-touch w-full rounded-control border border-input bg-card px-2"
           >
             <option value="">Not assigned</option>
@@ -249,7 +262,7 @@ function EditableTask({ task }: { task: Task }) {
             id="task-due"
             type="date"
             value={value.dueDate ?? ''}
-            onChange={(e) => setDraft((d) => ({ ...d, dueDate: e.target.value || null }))}
+            onChange={(e) => edit({ dueDate: e.target.value || null })}
             className="block min-h-touch w-full rounded-control border border-input bg-card px-2"
           />
         </div>
@@ -264,7 +277,7 @@ function EditableTask({ task }: { task: Task }) {
           rows={4}
           maxLength={10000}
           value={value.description ?? ''}
-          onChange={(e) => setDraft((d) => ({ ...d, description: e.target.value || null }))}
+          onChange={(e) => edit({ description: e.target.value || null })}
           className="block w-full rounded-control border border-input px-3 py-2"
         />
       </div>
@@ -275,7 +288,7 @@ function EditableTask({ task }: { task: Task }) {
         </span>
         <div className="flex gap-2">
           {dirty && !conflict && (
-            <Button type="button" variant="secondary" onClick={() => setDraft({})}>
+            <Button type="button" variant="secondary" onClick={clearDraft}>
               Cancel
             </Button>
           )}

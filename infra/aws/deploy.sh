@@ -14,8 +14,8 @@ sed -i '/^API_IMAGE=/d' .env
 echo "API_IMAGE=$image" >> .env
 
 docker compose pull api
-docker compose up -d db
-docker compose up -d --no-deps caddy
+# --remove-orphans: stops the Postgres container of the earlier setup (its volume stays).
+docker compose up -d --no-deps --remove-orphans caddy
 # A changed Caddyfile is not a Compose change, so tell the running Caddy to reload it.
 reloaded=no
 for _ in $(seq 1 10); do

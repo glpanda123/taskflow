@@ -1,32 +1,19 @@
 # What runs on the demo server (one EC2 instance, ADR-002 fallback profile).
-# Values come from /opt/taskflow/.env, written once by the instance's first boot:
-# POSTGRES_PASSWORD and JWT_SECRET are generated there and never leave the server.
+# Values come from /opt/taskflow/.env: JWT_SECRET is generated there at first boot and
+# never leaves the server; DATABASE_URL and DIRECT_URL (the managed Postgres) are added
+# by hand once, see README.md.
 # API_IMAGE is written to the same .env by deploy.sh on each release.
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: taskflow
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
-      POSTGRES_DB: taskflow
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U taskflow']
-      interval: 5s
-      retries: 20
-
   api:
     image: ${API_IMAGE:?}
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://taskflow:${POSTGRES_PASSWORD}@db:5432/taskflow
+      # Postgres is a managed database (Neon, ADR-002 update 2026-11-16): the app uses
+      # the pooled address, migrations the direct one.
+      DATABASE_URL: ${DATABASE_URL:?}
+      DIRECT_URL: ${DIRECT_URL:?}
       JWT_SECRET: ${JWT_SECRET:?}
-    depends_on:
-      db:
-        condition: service_healthy
 
   # HTTPS in front of the API: Caddy gets a Let's Encrypt certificate for SITE_ADDRESS.
   caddy:
@@ -44,5 +31,4 @@ services:
     # migrations have run; until the API is up, Caddy answers 502.
 
 volumes:
-  db-data:
   caddy-data:

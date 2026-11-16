@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  TaskFlow demo server (ADR-002 fallback profile): one EC2 instance running the API,
-  Postgres and Caddy with Docker Compose, an Elastic IP with HTTPS via sslip.io, an ECR
+  TaskFlow demo server (ADR-002 fallback profile): one EC2 instance running the API
+  and Caddy with Docker Compose (Postgres is a managed database outside the instance), an Elastic IP with HTTPS via sslip.io, an ECR
   repository for the API image, and a GitHub OIDC role that deploys through SSM Run
   Command (no SSH, no stored AWS keys). Uses the account's default VPC.
 
@@ -101,7 +101,7 @@ Resources:
           curl -fsSL https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64 \
             -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
-          # 1 GB of swap: Postgres + Node fit in 1 GB RAM, the swap absorbs spikes.
+          # 1 GB of swap: Node and Caddy fit in 1 GB RAM, the swap absorbs spikes.
           if [ ! -f /swapfile ]; then
             dd if=/dev/zero of=/swapfile bs=1M count=1024 && chmod 600 /swapfile
             mkswap /swapfile && swapon /swapfile && echo '/swapfile none swap sw 0 0' >> /etc/fstab
@@ -113,7 +113,6 @@ Resources:
           if [ ! -f .env ]; then
             umask 077
             {
-              echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)"
               echo "JWT_SECRET=$(openssl rand -hex 32)"
               echo "SITE_ADDRESS=${ServerAddress.PublicIp}.sslip.io"
             } > .env

@@ -21,6 +21,10 @@ pnpm --filter @taskflow/api dev          # builds, then serves on http://localho
 
 `start` and `dev` read `apps/api/.env` themselves (Node's `--env-file-if-exists`).
 
+`.env` needs two database addresses: `DATABASE_URL` for the app and `DIRECT_URL` for migrations.
+With a local Postgres they are the same; with Neon, the first is the pooled address and the
+second the direct one (see [`infra/aws`](../../infra/aws/README.md)).
+
 ## Run the web app on the real API
 
 The web app calls `/api/v1` on its own origin. With `API_URL` set, Next forwards those

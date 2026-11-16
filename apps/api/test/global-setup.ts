@@ -5,6 +5,7 @@ import { testDatabaseUrl } from './test-database-url';
 export default function setup() {
   execSync('pnpm exec prisma migrate deploy', {
     stdio: 'inherit',
-    env: { ...process.env, DATABASE_URL: testDatabaseUrl() },
+    // The test database is a plain Postgres: the app address and the migration address are the same.
+    env: { ...process.env, DATABASE_URL: testDatabaseUrl(), DIRECT_URL: testDatabaseUrl() },
   });
 }

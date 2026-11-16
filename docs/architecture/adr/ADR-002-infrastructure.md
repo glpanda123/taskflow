@@ -51,3 +51,22 @@ The demo therefore runs on the fallback listed above: **one EC2 instance with Do
 (~$13 a month, see [`infra/aws`](../../../infra/aws/README.md)). Nothing in the application changes:
 the API is still stateless, migrations still run before the new API starts, and the production
 profile is still the documented design.
+
+## Update 2026-11-16: the demo database moves to Neon
+
+On the fallback, Postgres ran as a container on the EC2 instance. Two problems showed up in
+daily use: the data could only be read through `psql` in a Session Manager shell, and it
+lived on one disk with no backups.
+
+| Option                                  | For                                                         | Against                                                                                | Verdict    |
+| --------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------- |
+| Keep the container, add `pg_dump` to S3 | Nothing new to depend on                                    | Still no easy way to look at data; I operate backups myself                            | Rejected   |
+| Keep the container, SSM port forwarding | Any desktop client works                                    | Needs AWS credentials and tooling on every machine I use                               | Rejected   |
+| Amazon RDS (the production profile)     | Same service as the production design                       | An always-on instance to pay for; the budget reason from 2026-11-09 still holds        | Not yet    |
+| **Neon (managed Postgres, free plan)**  | Web console and SQL editor, backups, Singapore region, free | A second provider; sleeps when idle (about 1 s on the first request); free-plan limits | **Chosen** |
+
+What changes: the app connects through Neon's pooler (`DATABASE_URL`), migrations use the
+direct address (`DIRECT_URL`, Prisma `directUrl`), and the server's Compose file no longer
+has a `db` service. What does not change: Postgres 16, the schema, the migrations-before-API
+deploy order, and the production profile (RDS Multi-AZ) as the answer for real traffic.
+The application has no Neon-specific code, so moving to RDS later is two environment variables.

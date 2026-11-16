@@ -10,7 +10,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // The app connects through the database's connection pooler (many short connections).
+  url       = env("DATABASE_URL")
+  // Migrations need one plain, direct connection: the pooler can't run them.
+  // With a local Postgres both variables hold the same address.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {

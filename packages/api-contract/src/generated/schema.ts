@@ -705,6 +705,18 @@ export interface components {
             };
         };
         /**
+         * @description The AI provider failed or did not answer in time (`type` ends in
+         *     `drafting-unavailable`). Nothing was saved; the client can offer "try again".
+         */
+        DraftingUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /**
          * @description The task changed since the client read it (`version` mismatch). The body carries
          *     the current task so the client can show "someone else changed this" and let the
          *     user re-apply their change.
@@ -771,6 +783,7 @@ export type ResponseForbidden = components['responses']['Forbidden'];
 export type ResponseNotFound = components['responses']['NotFound'];
 export type ResponseValidationError = components['responses']['ValidationError'];
 export type ResponseRateLimited = components['responses']['RateLimited'];
+export type ResponseDraftingUnavailable = components['responses']['DraftingUnavailable'];
 export type ResponseVersionConflict = components['responses']['VersionConflict'];
 export type ParameterWorkspaceId = components['parameters']['WorkspaceId'];
 export type ParameterInvitationToken = components['parameters']['InvitationToken'];
@@ -1196,6 +1209,7 @@ export interface operations {
             404: components["responses"]["NotFound"];
             422: components["responses"]["ValidationError"];
             429: components["responses"]["RateLimited"];
+            503: components["responses"]["DraftingUnavailable"];
         };
     };
     listMembers: {

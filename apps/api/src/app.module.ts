@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { AccessService } from './access/access.service';
+import { ClaudeTaskDrafter } from './ai/claude-task-drafter';
+import { TaskDrafter } from './ai/task-drafter';
+import { TaskDraftsController } from './ai/task-drafts.controller';
 import { AuthController } from './auth/auth.controller';
 import { AuthService } from './auth/auth.service';
 import { ProblemFilter } from './common/problem';
@@ -28,6 +31,7 @@ import { WorkspacesController } from './workspaces/workspaces.controller';
     TaskController,
     MembersController,
     InvitationsController,
+    TaskDraftsController,
   ],
   providers: [
     PrismaService,
@@ -38,6 +42,8 @@ import { WorkspacesController } from './workspaces/workspaces.controller';
     RealtimeHub,
     TaskEvents,
     RealtimeGateway,
+    // Tests replace draft() on this instance, so they never call Claude.
+    { provide: TaskDrafter, useClass: ClaudeTaskDrafter },
     { provide: APP_FILTER, useClass: ProblemFilter },
   ],
 })

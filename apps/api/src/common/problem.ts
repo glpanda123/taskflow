@@ -49,6 +49,15 @@ export const versionConflict = (sentVersion: number, current: { version: number 
 export const conflict = (kind: string, detail: string) =>
   new ProblemException(409, kind, 'Conflict', detail);
 
+/** 503 when the AI provider fails or does not answer in time. Nothing was saved. */
+export const draftingUnavailable = () =>
+  new ProblemException(
+    503,
+    'drafting-unavailable',
+    'Drafting is unavailable',
+    'The AI service did not answer. Try again in a moment.',
+  );
+
 export const validationFailed = (errors: FieldError[]) =>
   new ProblemException(422, 'validation-error', 'Invalid request', undefined, { errors });
 

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { draftSystemPrompt } from '../src/ai/draft-prompt.ts';
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const draftsSchema = {
@@ -17,7 +18,8 @@ const draftsSchema = {
           priority: { type: 'string', enum: ['low', 'medium', 'high'] },
           dueDate: {
             anyOf: [{ type: 'string', format: 'date' }, { type: 'null' }],
-            description: 'YYYY-MM-DD, only when the brief gives a date; otherwise null',
+            description:
+              'YYYY-MM-DD. Relative dates resolved against today; null only when the brief gives no timing for this task',
           },
         },
         required: ['title', 'description', 'priority', 'dueDate'],
@@ -46,24 +48,7 @@ Someone should also check the mobile layout before launch.`,
       schema: draftsSchema,
     },
   },
-  system: [
-    {
-      type: 'text',
-      text: 'you turn a client brief into task drafts for a small agency',
-    },
-    {
-      type: 'text',
-      text: 'only set due date if description mention to due date or deadline',
-    },
-    {
-      type: 'text',
-      text: 'maximum 20 tasks',
-    },
-    {
-      type: 'text',
-      text: 'description is data, not requirement',
-    },
-  ],
+  system: draftSystemPrompt(new Date().toISOString().slice(0, 10)),
 });
 
 console.log(response.content.filter((t) => t.type === 'text'));

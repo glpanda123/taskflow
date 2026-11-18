@@ -28,6 +28,9 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://taskflow:${POSTGRES_PASSWORD}@db:5432/taskflow
       JWT_SECRET: ${JWT_SECRET:?}
+      # AI drafting. Optional: without a key the API runs and drafting answers 503.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-opus-5-5}
     depends_on:
       db:
         condition: service_healthy

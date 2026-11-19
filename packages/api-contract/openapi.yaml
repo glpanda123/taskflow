@@ -436,6 +436,8 @@ paths:
           $ref: '#/components/responses/ValidationError'
         '429':
           $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/DraftingUnavailable'
 
   # ──────────────────────────── Members ────────────────────────────
   /workspaces/{workspaceId}/members:
@@ -633,6 +635,13 @@ components:
         Retry-After:
           description: Seconds to wait before retrying
           schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    DraftingUnavailable:
+      description: |
+        The AI provider failed or did not answer in time (`type` ends in
+        `drafting-unavailable`). Nothing was saved; the client can offer "try again".
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }

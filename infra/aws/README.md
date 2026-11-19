@@ -55,6 +55,17 @@ to that value. Repositories created after July 2026 use
 - **Remove everything:** delete the stack. The ECR repository must be empty first
   (delete its images in the ECR console).
 
+## AI drafting key
+
+Task drafting calls Claude with the key in `/opt/taskflow/.env`. Without it the API runs
+and `POST /projects/{id}/task-drafts` answers 503. To turn drafting on, add the line below on
+the server (EC2 → the instance → Connect → _Session Manager_, `sudo nano /opt/taskflow/.env`),
+then run the deploy again. Use a key made for this server only, so it can be revoked alone.
+
+```
+ANTHROPIC_API_KEY=<the server's key>
+```
+
 ## Look at the data
 
 Postgres listens on the server's `127.0.0.1:5432` only. A Session Manager port-forwarding

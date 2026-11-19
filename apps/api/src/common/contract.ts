@@ -24,10 +24,23 @@ function toFieldErrors(errors: ErrorObject[]): FieldError[] {
   });
 }
 
-/** Throws a 422 problem unless `body` matches components/schemas/<name>. */
-export function assertBody<T>(schemaName: string, body: unknown): T {
+function validatorFor(schemaName: string) {
   const validate = ajv.getSchema(`contract#/components/schemas/${schemaName}`);
   if (!validate) throw new Error(`Unknown schema ${schemaName}`);
+  return validate;
+}
+
+/** Throws a 422 problem unless `body` matches components/schemas/<name>. */
+export function assertBody<T>(schemaName: string, body: unknown): T {
+  const validate = validatorFor(schemaName);
   if (!validate(body)) throw validationFailed(toFieldErrors(validate.errors ?? []));
   return body as T;
+}
+
+/**
+ * Whether `value` matches components/schemas/<name>. For data we filter rather than
+ * reject, such as drafts written by the AI model.
+ */
+export function matchesSchema(schemaName: string, value: unknown): boolean {
+  return validatorFor(schemaName)(value) === true;
 }

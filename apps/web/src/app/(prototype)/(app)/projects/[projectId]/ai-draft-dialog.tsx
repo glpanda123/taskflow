@@ -15,6 +15,9 @@ import { priorityLabel } from '@/lib/format';
 
 const SAMPLE_BRIEF = `We're launching the Acme spring campaign landing page next Friday. It needs a hero section with the new product shots, a pricing table and a signup form connected to Mailchimp. The client should review the copy by Wednesday. Also set up analytics events for signups, and make sure the page works on mobile. The client wants a quick demo call before launch.`;
 
+// The mock API answers with a rule-based stand-in; the real API asks Claude.
+const mockingEnabled = process.env.NEXT_PUBLIC_API_MOCKING !== 'disabled';
+
 type Row = TaskDraft & { keep: boolean };
 
 export function AiDraftButton({
@@ -217,7 +220,9 @@ export function AiDraftButton({
 
           <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3">
             <p className="text-caption text-muted-foreground">
-              Prototype: drafts come from a rule-based stand-in for the model.
+              {mockingEnabled
+                ? 'Prototype: drafts come from a rule-based stand-in for the model.'
+                : 'Drafts are written by Claude. Check them before you add them.'}
             </p>
             <div className="flex gap-2">
               {rows === null ? (

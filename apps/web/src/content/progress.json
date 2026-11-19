@@ -1,68 +1,44 @@
 {
-  "updatedAt": "2026-11-16",
+  "updatedAt": "2026-11-19",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
   "endDate": "2026-11-22",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-16",
-    "focus": "Stage 4 — the backend, test first",
+    "date": "2026-11-19",
+    "focus": "Stage B — AI in the product",
     "items": [
       {
-        "label": "NestJS API with Prisma and a real Postgres",
+        "label": "Claude call with structured output (JSON schema for task drafts)",
         "done": true
       },
       {
-        "label": "Auth: register, login, refresh rotation with reuse detection, logout, /me",
+        "label": "System prompt with today's date and date rules (\"next Friday\")",
         "done": true
       },
       {
-        "label": "Guardrails: type-aware lint, CI job with Postgres",
+        "label": "POST /task-drafts: access and input checks before the paid call",
         "done": true
       },
       {
-        "label": "Roles and tenant isolation",
+        "label": "Drafts checked against the contract after the model; at most 20; nothing saved",
         "done": true
       },
       {
-        "label": "Tasks: create and list, board order, cursor paging",
+        "label": "Provider failure or timeout → 503; the API starts without a key",
         "done": true
       },
       {
-        "label": "Tasks: edit with optimistic locking (409 with the current task)",
+        "label": "Live in production",
         "done": true
       },
       {
-        "label": "Tasks: drag and drop (move) with fractional keys",
-        "done": true
+        "label": "Evals in CI",
+        "done": false
       },
       {
-        "label": "Web app on the real API: sign-up, onboarding, board (other screens show Coming soon)",
-        "done": true
-      },
-      {
-        "label": "Deploy setup: Dockerfile, CloudFormation, deploy workflow (EC2 demo profile)",
-        "done": true
-      },
-      {
-        "label": "API live on AWS over HTTPS (one EC2 instance, deployed from GitHub Actions)",
-        "done": true
-      },
-      {
-        "label": "Web app on the production API",
-        "done": true
-      },
-      {
-        "label": "Realtime, part 1: WebSocket gateway, presence, live task changes (one instance)",
-        "done": true
-      },
-      {
-        "label": "Members: list, invite by link, accept an invitation",
-        "done": true
-      },
-      {
-        "label": "Realtime, part 2: Redis pub/sub and the outbox (after Dec 12)",
+        "label": "MCP server for TaskFlow",
         "done": false
       }
     ]
@@ -424,23 +400,23 @@
     },
     {
       "date": "2026-11-17",
-      "status": "planned",
-      "summary": "AI: real Claude call, tool use, structured output"
+      "status": "shipped",
+      "summary": "AI: first Claude calls, structured output for task drafts"
     },
     {
       "date": "2026-11-18",
-      "status": "planned",
-      "summary": "AI: schema validation, retries, timeout, rate limit"
+      "status": "shipped",
+      "summary": "AI: drafts endpoint, contract checks after the model, 503 on provider failure"
     },
     {
       "date": "2026-11-19",
-      "status": "planned",
-      "summary": "AI: evals in CI"
+      "status": "shipped",
+      "summary": "AI drafting live in production"
     },
     {
       "date": "2026-11-20",
       "status": "planned",
-      "summary": "MCP server"
+      "summary": "AI: evals in CI"
     },
     {
       "date": "2026-11-21",
@@ -454,6 +430,11 @@
     }
   ],
   "log": [
+    {
+      "date": "2026-11-19",
+      "title": "AI task drafting on Claude",
+      "body": "Paste a client brief and get up to 20 task drafts to review; nothing is saved until the user adds them through the normal create path. The API checks access and input before the paid call, asks Claude for structured output (a JSON schema), then checks every draft again against the API contract and drops the ones that break it: the schema fixes the shape, not the meaning. The prompt carries today's date, because the model does not know it and briefs say \"next Friday\"; the first run left every date empty until the date rules were written down. A provider failure or timeout answers 503, and the API still starts when no key is configured. About one cent per brief. Tests replace the model with a stand-in, so CI never calls it; quality is measured next, with evals."
+    },
     {
       "date": "2026-11-16",
       "title": "Members and invitations by link",

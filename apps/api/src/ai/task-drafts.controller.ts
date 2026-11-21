@@ -1,21 +1,11 @@
 import { Body, Controller, HttpCode, Param, Post, Req, UseGuards } from '@nestjs/common';
-import type {
-  DraftTasksRequest,
-  DraftTasksResponse,
-  TaskDraft,
-} from '@taskflow/api-contract/schema';
+import type { DraftTasksRequest, DraftTasksResponse } from '@taskflow/api-contract/schema';
 import { AccessService } from '../access/access.service';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
-import { assertBody, matchesSchema } from '../common/contract';
+import { assertBody } from '../common/contract';
 import { draftingUnavailable } from '../common/problem';
 import { TaskDrafter } from './task-drafter';
-
-const MAX_DRAFTS = 20;
-
-/** A draft we can hand to the client: the contract's TaskDraft, and a title that isn't blank. */
-function isUsableDraft(item: unknown): item is TaskDraft {
-  return matchesSchema('TaskDraft', item) && (item as TaskDraft).title.trim() !== '';
-}
+import { keepUsableDrafts } from './usable-drafts';
 
 @Controller('projects/:projectId/task-drafts')
 @UseGuards(AuthGuard)
@@ -48,6 +38,6 @@ export class TaskDraftsController {
     }
 
     // The model's output is untrusted: keep what matches the contract, at most 20.
-    return { drafts: raw.filter(isUsableDraft).slice(0, MAX_DRAFTS) };
+    return { drafts: keepUsableDrafts(raw) };
   }
 }

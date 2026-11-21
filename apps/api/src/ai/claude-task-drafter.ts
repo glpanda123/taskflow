@@ -19,21 +19,33 @@ export class ClaudeTaskDrafter extends TaskDrafter {
 
   private readonly model = process.env.ANTHROPIC_MODEL ?? 'claude-opus-5-5';
 
-  async draft({ brief, today }: DraftInput): Promise<unknown[]> {
-    if (!this.client) throw new Error('ANTHROPIC_API_KEY is not set');
-
-    const response = await this.client.messages.create({
+  /** The request as sent: the eval records it next to the answer. */
+  buildRequest({ brief, today }: DraftInput) {
+    return {
       model: this.model,
       max_tokens: 16000,
       system: draftSystemPrompt(today),
       // The brief is data, not instructions: it stays inside its own tags.
-      messages: [{ role: 'user', content: `<brief>\n${brief}\n</brief>` }],
+      messages: [{ role: 'user' as const, content: `<brief>\n${brief}\n</brief>` }],
       output_config: {
-        effort: 'high',
-        format: { type: 'json_schema', schema: draftsSchema },
+        effort: 'high' as const,
+        format: { type: 'json_schema' as const, schema: draftsSchema },
       },
-    });
+    };
+  }
 
+  /** One call to Claude, answer returned whole (model, usage, stop reason) for the eval. */
+  async request(input: DraftInput): Promise<Anthropic.Message> {
+    if (!this.client) throw new Error('ANTHROPIC_API_KEY is not set');
+    return this.client.messages.create(this.buildRequest(input));
+  }
+
+  async draft(input: DraftInput): Promise<unknown[]> {
+    return ClaudeTaskDrafter.parseDrafts(await this.request(input));
+  }
+
+  /** The drafts in an answer, or an error saying why there are none. */
+  static parseDrafts(response: Anthropic.Message): unknown[] {
     // max_tokens: the JSON was cut off. refusal: no drafts at all.
     if (response.stop_reason !== 'end_turn') {
       throw new Error(`Drafting stopped early: ${response.stop_reason}`);

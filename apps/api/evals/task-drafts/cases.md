@@ -1,7 +1,7 @@
 # Eval cases: task drafts from a brief
 
 Generated from `cases.json` by `render-cases.mjs`; edit the JSON, not this file.
-Written by Claude (the coding assistant) on 2026-11-20/21. Owner review: pending. Expected answers were written **before** any model run.
+Written by Claude (the coding assistant) on 2026-11-20/21. Approved by the project owner on 2026-11-21. Expected answers were written **before** any model run.
 
 Every case also checks, without listing it: no draft is dropped by the contract filter, no due date is before "today", and drafts are in the brief's language.
 

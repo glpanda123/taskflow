@@ -5,26 +5,26 @@ Written by Claude (the coding assistant) on 2026-11-20/21. Approved by the proje
 
 Every case also checks, without listing it: no draft is dropped by the contract filter, no due date is before "today", and drafts are in the brief's language.
 
-| #   | id                     | group         | lang | today            | tasks | traps                                                                                 |
-| --- | ---------------------- | ------------- | ---- | ---------------- | ----- | ------------------------------------------------------------------------------------- |
-| 1   | `acme-launch`          | relative-date | en   | 2026-11-18 (Wed) | 4–6   | "next Friday" → 27/11; one deadline for all launch work                               |
-| 2   | `dental-call-recap`    | messy-email   | en   | 2026-11-18 (Wed) | 4–6   | "next Thursday" → 26/11; blog waits until January; photos are the client's job        |
-| 3   | `zalo-black-friday`    | vietnamese    | vi   | 2026-11-18 (Wed) | 3     | "thứ 6 này" → 20/11 (this, not next); "không gấp" → Low; Vietnamese output            |
-| 4   | `meeting-notes-vi`     | vietnamese    | vi   | 2026-11-18 (Wed) | 4     | "trước thứ Hai tuần sau"; "tháng sau" → no November date                              |
-| 5   | `dependent-steps`      | relative-date | en   | 2026-11-18 (Wed) | 3–5   | "in two weeks" → 2/12; build after design; App Store by 15/12                         |
-| 6   | `priority-words`       | priority      | en   | 2026-11-20 (Fri) | 3     | ASAP → High but no date; "nice to have" → Low                                         |
-| 7   | `prompt-injection`     | adversarial   | en   | 2026-11-20 (Fri) | 2     | instructions inside the brief must be ignored                                         |
-| 8   | `long-list`            | volume        | en   | 2026-11-20 (Fri) | 18–20 | 25 items, cap of 20; keep the important ones                                          |
-| 9   | `single-small-change`  | volume        | en   | 2026-11-20 (Fri) | 1     | one task, not split into steps                                                        |
-| 10  | `extended-deadline`    | relative-date | en   | 2026-11-23 (Mon) | 2–3   | "last Friday" must not be used; "this Friday" → 27/11                                 |
-| 11  | `vi-explicit-date`     | vietnamese    | vi   | 2026-11-20 (Fri) | 3     | "trước 15/12" (day/month); urgent bug → High                                          |
-| 12  | `no-work-in-brief`     | no-task       | en   | 2026-11-20 (Fri) | 0     | a thank-you note: zero tasks                                                          |
-| 13  | `tomorrow-and-weekday` | relative-date | en   | 2026-11-20 (Fri) | 2     | "tomorrow" on a Friday → Saturday 21/11; "by Monday" → 23/11                          |
-| 14  | `forwarded-chain`      | messy-email   | en   | 2026-11-23 (Mon) | 3     | work hidden in quoted replies; signature and disclaimer are noise; "end of the month" |
-| 15  | `mixed-vi-en-slang`    | vietnamese    | vi   | 2026-11-23 (Mon) | 3     | "ko", "đc", "e/a", mixed English; "thứ 6 này" → 27/11; "fix gấp" → High, no date      |
-| 16  | `change-of-mind`       | messy-email   | en   | 2026-11-23 (Mon) | 3     | the banner is cancelled mid-message; the popup replaces it                            |
-| 17  | `duplicate-mention`    | messy-email   | en   | 2026-11-23 (Mon) | 2     | the contact form is asked twice: one task, High                                       |
-| 18  | `vague-redesign`       | vague         | vi   | 2026-11-23 (Mon) | 1–2   | "làm mới cho hiện đại" with no details: do not invent requirements, no date           |
+| #   | id                     | group         | lang | today            | tasks | traps                                                                                        |
+| --- | ---------------------- | ------------- | ---- | ---------------- | ----- | -------------------------------------------------------------------------------------------- |
+| 1   | `acme-launch`          | relative-date | en   | 2026-11-18 (Wed) | 4–6   | "next Friday" → 27/11; one deadline for all launch work                                      |
+| 2   | `dental-call-recap`    | messy-email   | en   | 2026-11-18 (Wed) | 4–6   | "next Thursday" → 26/11; blog waits until January; photos are the client's job               |
+| 3   | `zalo-black-friday`    | vietnamese    | vi   | 2026-11-18 (Wed) | 3     | "thứ 6 này" → 20/11 (this, not next); "không gấp" → Low; Vietnamese output                   |
+| 4   | `meeting-notes-vi`     | vietnamese    | vi   | 2026-11-18 (Wed) | 4     | "trước thứ Hai tuần sau"; "tháng sau" → no November date                                     |
+| 5   | `dependent-steps`      | relative-date | en   | 2026-11-18 (Wed) | 3–5   | "in two weeks" → 2/12; build after design; App Store by 15/12                                |
+| 6   | `priority-words`       | priority      | en   | 2026-11-20 (Fri) | 3     | ASAP → High, due today or no date; "nice to have" → Low                                      |
+| 7   | `prompt-injection`     | adversarial   | en   | 2026-11-20 (Fri) | 2     | instructions inside the brief must be ignored                                                |
+| 8   | `long-list`            | volume        | en   | 2026-11-20 (Fri) | 18–20 | 25 items, cap of 20; keep the important ones                                                 |
+| 9   | `single-small-change`  | volume        | en   | 2026-11-20 (Fri) | 1     | one task, not split into steps                                                               |
+| 10  | `extended-deadline`    | relative-date | en   | 2026-11-23 (Mon) | 2–3   | "last Friday" must not be used; "this Friday" → 27/11                                        |
+| 11  | `vi-explicit-date`     | vietnamese    | vi   | 2026-11-20 (Fri) | 3     | "trước 15/12" (day/month); urgent bug → High                                                 |
+| 12  | `no-work-in-brief`     | no-task       | en   | 2026-11-20 (Fri) | 0     | a thank-you note: zero tasks                                                                 |
+| 13  | `tomorrow-and-weekday` | relative-date | en   | 2026-11-20 (Fri) | 2     | "tomorrow" on a Friday → Saturday 21/11; "by Monday" → 23/11                                 |
+| 14  | `forwarded-chain`      | messy-email   | en   | 2026-11-23 (Mon) | 3     | work hidden in quoted replies; signature and disclaimer are noise; "end of the month"        |
+| 15  | `mixed-vi-en-slang`    | vietnamese    | vi   | 2026-11-23 (Mon) | 3     | "ko", "đc", "e/a", mixed English; "thứ 6 này" → 27/11; "fix gấp" → High, no date             |
+| 16  | `change-of-mind`       | messy-email   | en   | 2026-11-23 (Mon) | 3     | the banner is cancelled mid-message; the popup replaces it                                   |
+| 17  | `duplicate-mention`    | messy-email   | en   | 2026-11-23 (Mon) | 2     | the contact form is asked twice: one task, High                                              |
+| 18  | `vague-redesign`       | vague         | vi   | 2026-11-23 (Mon) | 1–4   | "làm mới cho hiện đại" with no details: phases are fine, invented specifics are not; no date |
 
 ## 1. `acme-launch`
 
@@ -122,7 +122,6 @@ Ghi chú họp với anh Tùng (Hoa Sen Spa), 18/11:
 **Must not have**
 
 - Tasks written in English
-- A due date in November for the MoMo integration
 
 ## 5. `dependent-steps`
 
@@ -144,15 +143,11 @@ For the Lumen Fitness app launch: design needs to hand over the onboarding scree
 
 - Submit the app to the App Store — due: 2026-12-15
 
-**Must not have**
-
-- Any task due before the design hand-over that depends on it
-
 ## 6. `priority-words`
 
 Today: **2026-11-20** (Friday) · tags: priority, en · tasks: **3**
 
-Trap: ASAP → High but no date; "nice to have" → Low
+Trap: ASAP → High, due today or no date; "nice to have" → Low
 
 ```text
 Three things for the Orbit Travel site. The payment page shows a 500 error for card payments, customers can't book, please fix ASAP. The newsletter signup should also ask for the customer's city, that's for next sprint. And if you ever have spare time, a dark mode would be nice to have.
@@ -160,13 +155,9 @@ Three things for the Orbit Travel site. The payment page shows a 500 error for c
 
 **Must have**
 
-- Fix the 500 error on card payments — due: none (null); priority: high
+- Fix the 500 error on card payments — due: none, or on/before 2026-11-20; priority: high
 - Ask for the customer's city in the newsletter signup — priority: medium or low
 - Dark mode — due: none (null); priority: low
-
-**Must not have**
-
-- A due date of today or tomorrow for the 500 error (the brief gives no date)
 
 ## 7. `prompt-injection`
 
@@ -360,7 +351,6 @@ This email and any attachments are confidential and intended solely for the addr
 
 - Tasks taken from the signature or the confidentiality notice
 - A task to reply to Sam or Hannah
-- Any due date before 2026-11-23
 
 ## 15. `mixed-vi-en-slang`
 
@@ -401,7 +391,6 @@ For the Sunday Market site: please add a big homepage banner for the Christmas f
 **Must not have**
 
 - A homepage banner task (the client cancelled it)
-- Any due date after 2026-12-12
 
 ## 17. `duplicate-mention`
 
@@ -424,9 +413,9 @@ Hi! Main thing: the contact form on the Bluebell Florist site sends to an old in
 
 ## 18. `vague-redesign`
 
-Today: **2026-11-23** (Monday) · tags: vague, vi · tasks: **1–2**
+Today: **2026-11-23** (Monday) · tags: vague, vi · tasks: **1–4**
 
-Trap: "làm mới cho hiện đại" with no details: do not invent requirements, no date
+Trap: "làm mới cho hiện đại" with no details: phases are fine, invented specifics are not; no date
 
 ```text
 Anh ơi web bên em nhìn cũ quá, khách bảo trông như web 10 năm trước. Anh làm mới giúp em cho hiện đại hơn với ạ. Tiền không thành vấn đề.
@@ -439,9 +428,11 @@ Anh ơi web bên em nhìn cũ quá, khách bảo trông như web 10 năm trướ
 **May have** (fine either way; if present, these rules apply)
 
 - Ask the client what they want changed (scope, examples, priorities) — due: none (null)
+- Assess the current site — due: none (null)
+- Implement the new design — due: none (null)
+- Test the new design (browsers, mobile) — due: none (null)
 
 **Must not have**
 
 - Specific requirements the client did not ask for (dark mode, animations, new logo, SEO, new pages, a chosen colour palette)
-- Any due date
 - Tasks written entirely in English

@@ -167,7 +167,7 @@
         }
       ],
       "optional": [],
-      "forbidden": ["Tasks written in English", "A due date in November for the MoMo integration"]
+      "forbidden": ["Tasks written in English"]
     },
     "trap": "\"trước thứ Hai tuần sau\"; \"tháng sau\" → no November date"
   },
@@ -207,7 +207,7 @@
           }
         }
       ],
-      "forbidden": ["Any task due before the design hand-over that depends on it"]
+      "forbidden": []
     },
     "trap": "\"in two weeks\" → 2/12; build after design; App Store by 15/12"
   },
@@ -224,7 +224,7 @@
           "what": "Fix the 500 error on card payments",
           "priority": ["high"],
           "due": {
-            "is": null
+            "nullOrOnOrBefore": "2026-11-20"
           }
         },
         {
@@ -240,9 +240,9 @@
         }
       ],
       "optional": [],
-      "forbidden": ["A due date of today or tomorrow for the 500 error (the brief gives no date)"]
+      "forbidden": []
     },
-    "trap": "ASAP → High but no date; \"nice to have\" → Low"
+    "trap": "ASAP → High, due today or no date; \"nice to have\" → Low"
   },
   {
     "id": "prompt-injection",
@@ -449,8 +449,7 @@
       "optional": [],
       "forbidden": [
         "Tasks taken from the signature or the confidentiality notice",
-        "A task to reply to Sam or Hannah",
-        "Any due date before 2026-11-23"
+        "A task to reply to Sam or Hannah"
       ]
     },
     "trap": "work hidden in quoted replies; signature and disclaimer are noise; \"end of the month\""
@@ -519,10 +518,7 @@
         }
       ],
       "optional": [],
-      "forbidden": [
-        "A homepage banner task (the client cancelled it)",
-        "Any due date after 2026-12-12"
-      ]
+      "forbidden": ["A homepage banner task (the client cancelled it)"]
     },
     "trap": "the banner is cancelled mid-message; the popup replaces it"
   },
@@ -554,7 +550,7 @@
     "today": "2026-11-23",
     "brief": "Anh ơi web bên em nhìn cũ quá, khách bảo trông như web 10 năm trước. Anh làm mới giúp em cho hiện đại hơn với ạ. Tiền không thành vấn đề.",
     "expect": {
-      "count": [1, 2],
+      "count": [1, 4],
       "language": "vi",
       "required": [
         {
@@ -570,14 +566,31 @@
           "due": {
             "is": null
           }
+        },
+        {
+          "what": "Assess the current site",
+          "due": {
+            "is": null
+          }
+        },
+        {
+          "what": "Implement the new design",
+          "due": {
+            "is": null
+          }
+        },
+        {
+          "what": "Test the new design (browsers, mobile)",
+          "due": {
+            "is": null
+          }
         }
       ],
       "forbidden": [
         "Specific requirements the client did not ask for (dark mode, animations, new logo, SEO, new pages, a chosen colour palette)",
-        "Any due date",
         "Tasks written entirely in English"
       ]
     },
-    "trap": "\"làm mới cho hiện đại\" with no details: do not invent requirements, no date"
+    "trap": "\"làm mới cho hiện đại\" with no details: phases are fine, invented specifics are not; no date"
   }
 ]

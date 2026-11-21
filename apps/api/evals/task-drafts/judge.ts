@@ -35,7 +35,8 @@ numbered from 0. Decide meaning only; do not judge dates, priorities, wording or
   work (same work, any wording), or -1 if no draft does. One draft can cover one item.
 - optional: the same for OPTIONAL items.
 - invented: indices of drafts that ask for work the brief does not ask for, imply or need.
-  Splitting one requested job into its natural parts is not invented.
+  Splitting one requested job into its natural phases (assess, design, build, test) is not
+  invented, and those phases are not duplicates of each other.
 - forbidden: [draft index, rule index] for each draft that breaks a MUST NOT rule.
   A rule about the whole set (for example "any task") counts against every draft.
 - duplicates: indices of drafts that repeat the work of an earlier draft.

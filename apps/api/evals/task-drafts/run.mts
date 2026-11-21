@@ -248,7 +248,18 @@ const graded = rows.filter((r) => r.grade);
 const n = graded.length;
 const mean = (k: keyof Grade) => (n ? graded.reduce((s, r) => s + r.grade![k], 0) / n : NaN);
 const p = mean('pass');
-const half = n ? 1.96 * Math.sqrt((p * (1 - p)) / n) : NaN;
+// Wilson 95% interval: unlike p ± 1.96·sqrt(p(1-p)/n), it stays honest at 0% and 100%.
+const wilson = (k: number, total: number): [number, number] => {
+  if (!total) return [NaN, NaN];
+  const z = 1.96;
+  const ph = k / total;
+  const centre = (ph + (z * z) / (2 * total)) / (1 + (z * z) / total);
+  const spread =
+    (z * Math.sqrt((ph * (1 - ph)) / total + (z * z) / (4 * total * total))) /
+    (1 + (z * z) / total);
+  return [Math.max(0, centre - spread), Math.min(1, centre + spread)];
+};
+const [low, high] = wilson(Math.round(p * n), n);
 const errors = existsSync(join(outDir, 'errors.jsonl'))
   ? readFileSync(join(outDir, 'errors.jsonl'), 'utf8').split('\n').filter(Boolean).length
   : 0;
@@ -270,7 +281,7 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 const md = [
   `## AI eval: task drafts (${variant})`,
   '',
-  `**Pass: ${graded.filter((r) => r.grade!.pass === 1).length}/${n} (${pct(p)} ± ${pct(half)})** · errors: ${errors} · truncated: ${rows.filter((r) => r.status === 'truncated').length} · cost: $${totalCost.toFixed(2)} · drafter latency median ${lat[Math.floor(lat.length / 2)]?.toFixed(1) ?? '–'} s, max ${lat.at(-1)?.toFixed(1) ?? '–'} s · wall clock ${((performance.now() - wallStart) / 1000).toFixed(0)} s`,
+  `**Pass: ${graded.filter((r) => r.grade!.pass === 1).length}/${n} (${pct(p)}, 95% interval ${pct(low)}–${pct(high)})** · errors: ${errors} · truncated: ${rows.filter((r) => r.status === 'truncated').length} · cost: $${totalCost.toFixed(2)} · drafter latency median ${lat[Math.floor(lat.length / 2)]?.toFixed(1) ?? '–'} s, max ${lat.at(-1)?.toFixed(1) ?? '–'} s · wall clock ${((performance.now() - wallStart) / 1000).toFixed(0)} s`,
   '',
   '| ' + metrics.join(' | ') + ' |',
   '| ' + metrics.map(() => '---').join(' | ') + ' |',

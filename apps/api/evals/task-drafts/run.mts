@@ -15,7 +15,10 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { ClaudeTaskDrafter as DrafterClass } from '../../src/ai/claude-task-drafter.ts';
-import type { keepUsableDrafts as KeepFn } from '../../src/ai/usable-drafts.ts';
+import type {
+  isUsableDraft as IsUsableFn,
+  keepUsableDrafts as KeepFn,
+} from '../../src/ai/usable-drafts.ts';
 import { grade, type Grade } from './grade.ts';
 import { judge, judgeClient as makeJudgeClient, JUDGE_MODEL } from './judge.ts';
 import type { Draft, EvalCase } from './types.ts';
@@ -26,7 +29,8 @@ const require = createRequire(import.meta.url);
 const { ClaudeTaskDrafter } = require('../../dist/ai/claude-task-drafter.js') as {
   ClaudeTaskDrafter: typeof DrafterClass;
 };
-const { keepUsableDrafts } = require('../../dist/ai/usable-drafts.js') as {
+const { isUsableDraft, keepUsableDrafts } = require('../../dist/ai/usable-drafts.js') as {
+  isUsableDraft: typeof IsUsableFn;
   keepUsableDrafts: typeof KeepFn;
 };
 
@@ -161,11 +165,12 @@ async function runCase(c: EvalCase, rep: number): Promise<Row> {
         : response.stop_reason === 'refusal'
           ? 'refused'
           : 'unparseable';
-    // A refusal or unreadable answer is the model's result: graded as a failure, not an infra error.
+    // Truncated, refused or unreadable: users get no drafts, so it is the model's failure
+    // under the production token budget, not an infra error.
     return {
       ...base,
       status,
-      grade: status === 'truncated' ? null : zero(),
+      grade: zero(),
       drafts: [],
       explanation: { pass: String(error) },
     };
@@ -179,7 +184,7 @@ async function runCase(c: EvalCase, rep: number): Promise<Row> {
   return {
     ...base,
     status: 'ok',
-    grade: grade(c, raw, drafts, j.verdict),
+    grade: grade(c, raw.filter((d) => !isUsableDraft(d)).length, drafts, j.verdict),
     explanation: { judge: j.verdict.explanation },
     drafts,
     judge_model: j.response.model,
@@ -240,7 +245,8 @@ async function worker() {
 await Promise.all(Array.from({ length: Math.min(concurrency, jobs.length) }, worker));
 
 // ── Summary ───────────────────────────────────────────────────────────────────
-const rows = readFileSync(resultsFile, 'utf8')
+// No file when every attempt failed (a bad key, an outage): summarise errors only.
+const rows = (existsSync(resultsFile) ? readFileSync(resultsFile, 'utf8') : '')
   .split('\n')
   .filter(Boolean)
   .map((l) => JSON.parse(l) as Row);
@@ -305,3 +311,5 @@ const md = [
 writeFileSync(join(outDir, 'summary.md'), md + '\n');
 if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, md + '\n');
 console.log(`\n${md.split('\n')[2]}`);
+// Nothing graded is a broken run (bad key, outage), not a score: fail the job.
+if (n === 0 && errors > 0) process.exitCode = 1;

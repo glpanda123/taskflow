@@ -84,7 +84,7 @@ describe('grade', () => {
       draft('Hero banner', '2026-11-27'),
       draft('Pricing table', '2026-11-27', 'high'),
     ];
-    expect(grade(acme, drafts, drafts, clean)).toMatchObject({
+    expect(grade(acme, 0, drafts, clean)).toMatchObject({
       pass: 1,
       coverage: 1,
       dates: 1,
@@ -94,7 +94,7 @@ describe('grade', () => {
 
   it('an empty answer fails (null baseline)', () => {
     const verdict = { ...clean, required: [-1, -1] };
-    expect(grade(acme, [], [], verdict)).toMatchObject({ pass: 0, coverage: 0, count_ok: 0 });
+    expect(grade(acme, 0, [], verdict)).toMatchObject({ pass: 0, coverage: 0, count_ok: 0 });
   });
 
   it('a wrong date or priority fails only that check', () => {
@@ -102,7 +102,7 @@ describe('grade', () => {
       draft('Hero banner', '2026-11-20'),
       draft('Pricing table', '2026-11-27', 'medium'),
     ];
-    const g = grade(acme, drafts, drafts, clean);
+    const g = grade(acme, 0, drafts, clean);
     expect(g).toMatchObject({ pass: 0, coverage: 1, dates: 0.5, priority: 0 });
   });
 
@@ -111,7 +111,7 @@ describe('grade', () => {
       draft('Hero banner', '2026-11-27'),
       draft('Pricing table', '2026-11-10', 'high'),
     ];
-    expect(grade(acme, drafts, drafts, clean).no_past_due).toBe(0);
+    expect(grade(acme, 0, drafts, clean).no_past_due).toBe(0);
   });
 
   it('drafts the contract filter dropped fail all_valid', () => {
@@ -119,7 +119,8 @@ describe('grade', () => {
       draft('Hero banner', '2026-11-27'),
       draft('Pricing table', '2026-11-27', 'high'),
     ];
-    expect(grade(acme, [...drafts, { title: '' }], drafts, clean).all_valid).toBe(0);
+    expect(grade(acme, 1, drafts, clean).all_valid).toBe(0);
+    expect(grade(acme, 0, drafts, clean).all_valid).toBe(1);
   });
 
   it('invented, forbidden and duplicate drafts each fail their own check', () => {
@@ -127,7 +128,7 @@ describe('grade', () => {
       draft('Hero banner', '2026-11-27'),
       draft('Pricing table', '2026-11-27', 'high'),
     ];
-    const g = grade(acme, drafts, drafts, {
+    const g = grade(acme, 0, drafts, {
       ...clean,
       invented: [1],
       forbidden: [[1, 0]],
@@ -141,6 +142,6 @@ describe('grade', () => {
       ...acme,
       expect: { ...acme.expect, count: [0, 0], required: [], optional: [] },
     };
-    expect(grade(empty, [], [], { ...clean, required: [], optional: [] }).pass).toBe(1);
+    expect(grade(empty, 0, [], { ...clean, required: [], optional: [] }).pass).toBe(1);
   });
 });

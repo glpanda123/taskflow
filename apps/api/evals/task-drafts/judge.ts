@@ -42,8 +42,12 @@ numbered from 0. Decide meaning only; do not judge dates, priorities, wording or
 - duplicates: indices of drafts that repeat the work of an earlier draft.
 - explanation: one or two sentences on anything you marked.`;
 
-/** The judge's own client, so callers never mix SDK builds (ESM vs CommonJS). */
-export const judgeClient = () => new Anthropic({ maxRetries: 3 });
+/**
+ * The judge's own client, so callers never mix SDK builds (ESM vs CommonJS).
+ * Bounded like the drafter's, so no request outlives run.mts's per-case ceiling:
+ * drafter 2 × 20 s + judge 3 × 30 s, plus backoff, stays under 150 s.
+ */
+export const judgeClient = () => new Anthropic({ timeout: 30_000, maxRetries: 2 });
 
 export async function judge(
   client: Anthropic,

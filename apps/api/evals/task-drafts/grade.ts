@@ -59,10 +59,11 @@ export type Grade = {
 };
 
 /**
- * `raw` is what the model returned, `drafts` what survived the contract filter (what
- * users see). Each metric is 0 or 1 except coverage, dates and priority (shares).
+ * `drafts` is what survived the contract filter (what users see); `dropped` is how many
+ * of the model's items the filter rejected as invalid (the 20-draft cap is not counted).
+ * Each metric is 0 or 1 except coverage, dates and priority (shares).
  */
-export function grade(c: EvalCase, raw: unknown[], drafts: Draft[], verdict: Verdict): Grade {
+export function grade(c: EvalCase, dropped: number, drafts: Draft[], verdict: Verdict): Grade {
   const e = c.expect;
   const found = verdict.required.filter((i) => i >= 0 && i < drafts.length).length;
   const req = itemChecks(e.required, verdict.required, drafts);
@@ -80,7 +81,7 @@ export function grade(c: EvalCase, raw: unknown[], drafts: Draft[], verdict: Ver
     no_duplicates: Number(verdict.duplicates.length === 0),
     language_ok: Number(languageOk(drafts, e.language)),
     no_past_due: Number(drafts.every((d) => d.dueDate === null || d.dueDate >= c.today)),
-    all_valid: Number(raw.length === drafts.length || raw.length > 20),
+    all_valid: Number(dropped === 0),
   };
   const pass = Number(Object.values(g).every((v) => v === 1));
   return { pass, ...g };

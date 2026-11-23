@@ -1,41 +1,29 @@
 {
-  "updatedAt": "2026-11-19",
+  "updatedAt": "2026-11-23",
   "title": "TaskFlow build status",
   "tagline": "Building a realtime task board for small agencies, in stages: problem → prototype → system design → code. Updated at the end of every working session.",
   "startDate": "2026-10-14",
-  "endDate": "2026-11-22",
+  "endDate": "2026-11-23",
   "currentStageId": "core",
   "today": {
-    "date": "2026-11-19",
-    "focus": "Stage B — AI in the product",
+    "date": "2026-11-23",
+    "focus": "Stage B — measuring the AI",
     "items": [
       {
-        "label": "Claude call with structured output (JSON schema for task drafts)",
+        "label": "18 eval cases, expected answers written before any model run",
         "done": true
       },
       {
-        "label": "System prompt with today's date and date rules (\"next Friday\")",
+        "label": "Code checks for dates, priority, count, language; a second model judges meaning",
         "done": true
       },
       {
-        "label": "POST /task-drafts: access and input checks before the paid call",
+        "label": "Pass rate with a 95% interval, cost and latency per run",
         "done": true
       },
       {
-        "label": "Drafts checked against the contract after the model; at most 20; nothing saved",
+        "label": "Evals run in CI on every change to the AI code",
         "done": true
-      },
-      {
-        "label": "Provider failure or timeout → 503; the API starts without a key",
-        "done": true
-      },
-      {
-        "label": "Live in production",
-        "done": true
-      },
-      {
-        "label": "Evals in CI",
-        "done": false
       },
       {
         "label": "MCP server for TaskFlow",
@@ -214,7 +202,7 @@
         },
         {
           "label": "AI drafting on a real LLM, with evals in CI",
-          "done": false
+          "done": true
         },
         {
           "label": "MCP server + agent skill for TaskFlow",
@@ -415,21 +403,26 @@
     },
     {
       "date": "2026-11-20",
-      "status": "planned",
-      "summary": "AI: evals in CI"
+      "status": "shipped",
+      "summary": "AI evals: test cases with expected answers"
     },
     {
       "date": "2026-11-21",
-      "status": "planned",
-      "summary": "MCP server (continued); Claude Code skills, hooks, subagents"
+      "status": "shipped",
+      "summary": "AI evals: runner, code checks and a model judge; first runs"
     },
     {
-      "date": "2026-11-22",
-      "status": "planned",
-      "summary": "Buffer, README, status page"
+      "date": "2026-11-23",
+      "status": "shipped",
+      "summary": "AI evals in CI"
     }
   ],
   "log": [
+    {
+      "date": "2026-11-23",
+      "title": "Evals for AI task drafting",
+      "body": "Tests replace the model with a stand-in, so they say nothing about the drafts themselves. The eval does: 18 client briefs, each with its expected tasks, dates and priorities written down before any model run, including traps such as a prompt injection, a deadline that moved, a client who changed their mind and a brief with no work in it. It runs the production code against the real model. Code checks what can be checked exactly (dates, priority, count, language, contract validity), and a second, cheaper model judges only meaning: which draft is which expected task, and what was invented or repeated. The first runs failed two cases, and both failures were mistakes in the eval, not the model, so the expectations were fixed before trusting the score. The production model passes 18/18; a model five times cheaper passes 17/18, but with 18 cases the two can't be told apart yet (95% intervals 82–100% and 74–99%). The review bot found three ways the grader could hide bad answers, all fixed. Every pull request that touches the AI code now runs the eval in CI, for about 30 cents."
+    },
     {
       "date": "2026-11-19",
       "title": "AI task drafting on Claude",

@@ -29,6 +29,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm build
+      - run: pnpm --filter @taskflow/mcp test
 
   # Backend tests run against a real Postgres (ADR-001): tenant isolation, 409s and
   # token races only show up with a real database.

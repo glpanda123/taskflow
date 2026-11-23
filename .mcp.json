@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "taskflow": {
+      "command": "node",
+      "args": ["packages/mcp-taskflow/src/index.ts"],
+      "env": {
+        "TASKFLOW_API_URL": "${TASKFLOW_API_URL:-http://localhost:3001/api/v1}",
+        "TASKFLOW_EMAIL": "${TASKFLOW_EMAIL}",
+        "TASKFLOW_PASSWORD": "${TASKFLOW_PASSWORD}"
+      }
+    }
+  }
+}

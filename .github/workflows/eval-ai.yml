@@ -1,0 +1,70 @@
+# AI eval for task drafting: runs the production drafter (Claude) over the cases in
+# apps/api/evals/task-drafts and grades the answers. It calls Claude for real and costs
+# money, so it runs only when the AI code or the eval changes, or by hand.
+# Needs the repository secret ANTHROPIC_API_KEY (a key made for CI only); without it
+# the job is skipped. Results: the job summary, and the "eval-task-drafts" artifact.
+name: AI eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: Run only the first N cases (empty = all)
+        required: false
+      reps:
+        description: Runs per case
+        required: false
+        default: '1'
+  pull_request:
+    paths:
+      - apps/api/src/ai/**
+      - apps/api/evals/**
+      - .github/workflows/eval-ai.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: eval-ai-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  task-drafts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Key present?
+        id: key
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::notice::No ANTHROPIC_API_KEY secret: AI eval skipped."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.key.outputs.skip != 'true'
+        uses: actions/checkout@v4
+      - if: steps.key.outputs.skip != 'true'
+        uses: pnpm/action-setup@v4
+      - if: steps.key.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.key.outputs.skip != 'true'
+        run: pnpm install --frozen-lockfile
+      - if: steps.key.outputs.skip != 'true'
+        run: pnpm --filter @taskflow/api build
+      - name: Run the eval
+        if: steps.key.outputs.skip != 'true'
+        working-directory: apps/api
+        run: |
+          args="--reps ${{ inputs.reps || '1' }}"
+          if [ -n "${{ inputs.limit }}" ]; then args="$args --limit ${{ inputs.limit }}"; fi
+          pnpm eval:drafts $args
+      - if: always() && steps.key.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-task-drafts
+          path: apps/api/evals/task-drafts/out/
+          if-no-files-found: ignore

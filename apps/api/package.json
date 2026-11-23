@@ -7,11 +7,12 @@
     "start": "node --env-file-if-exists=.env dist/main.js",
     "dev": "prisma generate && tsc -p tsconfig.build.json && node --env-file-if-exists=.env dist/main.js",
     "typecheck": "prisma generate && tsc --noEmit",
-    "lint": "prisma generate && eslint src test",
+    "lint": "prisma generate && eslint src test evals",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "test": "vitest run",
-    "test:unit": "vitest run --project unit"
+    "test:unit": "vitest run --project unit",
+    "eval:drafts": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --env-file-if-exists=.env evals/task-drafts/run.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.9.0",
